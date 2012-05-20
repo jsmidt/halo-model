@@ -1,0 +1,93 @@
+module halo
+use CAMB
+implicit none
+
+integer, parameter::dp = kind(1.0d0)
+real(dp), parameter:: kmin = 2.0e-4
+real(dp), parameter:: kmax = 9.610024d0
+real(dp), parameter:: dlnk = 0.07d0
+integer, parameter:: mpts = 155
+real(dp), parameter:: rho_bar = 1.0d0
+real(dp) :: R,z
+
+contains
+
+! Tophat window function. See eq. 58 of astro-ph/0206508.
+elemental real(dp) function w_top(x)
+    real(dp),intent(in) :: x
+    w_top = (3.0d0/x**3)*(sin(x)-x*cos(x))
+end function w_top
+
+
+! Variance in the initial density fluctuation (\sigma^2(m))
+! Equation 58 of astro-ph/0206508.
+real(dp) function sig_2(m)
+    real(dp),intent(in) :: m
+    real(dp) :: a,b,rombint
+    a = kmin
+    b = kmax
+    R = (3.0d0*m/4.0d0/pi/rho_bar)**0.3333333333d0
+    sig_2 = rombint(sig_2int,a,b,tol)
+end function sig_2
+real(dp) function sig_2int(k)
+    real(dp),intent(in) :: k
+    sig_2int = (k**2/2.0d0/pi**2)*P_lin(k)*w_top(k*R)**2
+end function sig_2int
+real(dp) function P_lin(k)
+real(dp), intent(in) :: k
+P_lin = 2
+end function P_lin
+
+! Calculate nu for mass m and redshift z.  Equation 57 of astro-ph/0206508.
+real(dp) function nu(m)
+    real(dp), intent(in) :: m
+    nu = 1.686470199841145d0*(1.0d0+z)*sig_2(m)
+end function nu
+
+! Calculate nu f_nu for mass m and redshift z. Equation 59 of astro-ph/0206508.
+real(dp) function nu_fnu(m)
+    real(dp), intent(in) :: m
+    real(dp):: A,q
+    A = 0.3222d0
+    q = 0.75d0
+    nu_fnu=A*(1.0d0+(q*nu(m))**0.3)*(q*nu(m)/2.0d0/pi)**0.5*exp(-q*nu(m)/2.0d0)
+end function nu_fnu
+
+! Calculate the Fourier transform of the dark matter distribution u(k|m)
+! Equation 81 & 82 of astro-ph/0206508
+!real(dp) function ukm(k,m)
+!    real(dp), intent(in) :: k,m
+!    real(dp) :: ps, rs,c 
+!    ps = 1.0
+!    rs = 1.0
+!    rs = 1.0
+!    ukm = 4.0d0*pi*ps*rs**3/m*(sin(k*rs)*(Si((1.0d0+C)*k*rs)-Si(k*rs)) &
+!        - sin(c*k*rs)/((1.0d0+c)
+!end function ukm
+
+
+! Get linear power spectrum Pk at k from CAMB. 
+subroutine linear_pk(k,Pk)
+   real, allocatable,dimension(:),intent(inout) :: k,Pk
+   integer :: i,error
+   type(CAMBdata) :: P
+
+   !allocate(k(mpts),Pk(mpts))
+   do i=1,mpts
+     k(i)=exp(log(kmin)+dlnk*(i-1))
+   end do
+
+   ! Get Default Cosmology Parameters.
+   call CAMB_SetDefParams(P%Params)
+   P%Params%WantTransfer= .true.
+   P%Params%Transfer%redshifts=z
+
+   ! Get transfer functions and power spectra Pk
+   call CAMB_GetTransfers(P%Params, P, error)
+   call Transfer_GetMatterPower(P%MTrans,Pk,1,1,real(kmin),real(dlnk),mpts)
+   Pk = Pk/3.0e8
+
+end subroutine linear_pk
+
+
+end module halo
