@@ -5,6 +5,8 @@ implicit none
 integer, parameter::dp = kind(1.0d0)
 real(dp), parameter:: kmin = 2.0e-4
 real(dp), parameter:: kmax = 9.610024d0
+real(dp), parameter:: mmin = 1e8
+real(dp), parameter:: mmax = 1e13
 real(dp), parameter:: dlnk = 0.07d0
 integer, parameter:: mpts = 155
 real(dp), parameter:: rho_bar = 1.0d0
@@ -44,19 +46,20 @@ real(dp) function nu(m)
     nu = 1.686470199841145d0*(1.0d0+z)*sig_2(m)
 end function nu
 
-! Calculate nu f_nu for mass m and redshift z. Equation 59 of astro-ph/0206508.
-real(dp) function nu_fnu(m)
+! Calculate f_nu for mass m and redshift z. Equation 59 of astro-ph/0206508.
+real(dp) function fnu(m)
     real(dp), intent(in) :: m
     real(dp):: A,q
     A = 0.3222d0
     q = 0.75d0
-    nu_fnu=A*(1.0d0+(q*nu(m))**0.3)*(q*nu(m)/2.0d0/pi)**0.5*exp(-q*nu(m)/2.0d0)
-end function nu_fnu
+    fnu=A*(1.0d0+(q*nu(m))**0.3)*(q*nu(m)/2.0d0/pi)**0.5*exp(-q*nu(m)/2.0d0)/nu(m)
+end function fnu
 
 ! Calculate the Fourier transform of the dark matter distribution u(k|m)
 ! Equation 81 & 82 of astro-ph/0206508
 real(dp) function ukm(k,m)
-    real(dp), intent(in) :: k,m
+    real(dp), intent(in) :: k
+    real(dp) :: m
     real(dp) :: ps, rs,c 
     ps = 1.0
     rs = 1.0
@@ -107,5 +110,18 @@ subroutine linear_pk(k,Pk)
 
 end subroutine linear_pk
 
+! Get 1-Halo Term
+real(dp) function P1h(k)
+    real(dp), intent(in) :: k
+    real(dp) :: rombint,tol2
+    tol2 = 1e-2
+    P1h = rombint(P1hi,mmin,mmax,tol2)
+end function P1h
+real(dp) function P1hi(m)
+    real(dp) :: m
+    real(dp) :: k
+    k = 1.0
+    P1hi = fnu(m)*(m/rho_bar)*ukm(k,m)**2
+end function P1hi
 
 end module halo
