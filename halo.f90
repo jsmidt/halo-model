@@ -55,15 +55,33 @@ end function nu_fnu
 
 ! Calculate the Fourier transform of the dark matter distribution u(k|m)
 ! Equation 81 & 82 of astro-ph/0206508
-!real(dp) function ukm(k,m)
-!    real(dp), intent(in) :: k,m
-!    real(dp) :: ps, rs,c 
-!    ps = 1.0
-!    rs = 1.0
-!    rs = 1.0
-!    ukm = 4.0d0*pi*ps*rs**3/m*(sin(k*rs)*(Si((1.0d0+C)*k*rs)-Si(k*rs)) &
-!        - sin(c*k*rs)/((1.0d0+c)
-!end function ukm
+real(dp) function ukm(k,m)
+    real(dp), intent(in) :: k,m
+    real(dp) :: ps, rs,c 
+    ps = 1.0
+    rs = 1.0
+    c = 1.0
+    ukm = 4.0d0*pi*ps*rs**3/m*(sin(k*rs)*(Si((1.0d0+C)*k*rs)-Si(k*rs)) &
+        - sin(c*k*rs)/((1.0d0+c)*k*rs)+cos(k*rs)*(Ci((1.0d0+C)*k*rs)-Ci(k*rs)))
+end function ukm
+real(dp) function Ci(x)
+   real(dp), intent(in) :: x
+   real(dp) :: rombint
+   Ci = rombint(Cii,x,kmax,tol)
+end function Ci
+real(dp) function Si(x)
+   real(dp), intent(in) :: x
+   real(dp) :: rombint
+   Si = rombint(Sii,x,kmax,tol)
+end function Si
+real(dp) function Cii(t)
+   real(dp), intent(in) :: t
+   Cii = -cos(t)/t
+end function Cii
+real(dp) function Sii(t)
+   real(dp), intent(in) :: t
+   Sii = sin(t)/t
+end function Sii
 
 
 ! Get linear power spectrum Pk at k from CAMB. 

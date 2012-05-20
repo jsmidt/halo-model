@@ -28,4 +28,12 @@ z = 0.1
 write(*,*) nu_fnu(m)
 z = 10
 write(*,*) nu_fnu(m)
+
+
+z = 0.1
+write(*,*) ukm(z,m)
+z = 10
+write(*,*) ukm(z,m)
+
+
 end program test
