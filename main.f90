@@ -14,7 +14,7 @@ write(*,*) sig_2(m)
 allocate(k(mpts),Pk(mpts))
 call linear_pk(k,Pk)
 
-   open(unit=10,file='matterpower01.dat',form='formatted',status='unknown')
+   open(unit=10,file='matterpower.dat',form='formatted',status='unknown')
    do i=1,mpts
      write(10,*) k(i),Pk(i)
    end do
