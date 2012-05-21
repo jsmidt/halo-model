@@ -15,10 +15,10 @@ real(dp) :: z,kk
 contains
 
 ! Tophat window function. See eq. 58 of astro-ph/0206508.
-elemental real(dp) function w_top(x)
+elemental real(dp) function win_top(x)
     real(dp),intent(in) :: x
-    w_top = (3.0d0/x**3)*(sin(x)-x*cos(x))
-end function w_top
+    win_top = (3.0d0/x**3)*(sin(x)-x*cos(x))
+end function win_top
 
 
 ! Variance in the initial density fluctuation (\sigma^2(m))
@@ -27,7 +27,6 @@ real(dp) function sig_2(m)
     real(dp),intent(in) :: m
     real(dp) :: rombint,tol2,R
     R = (3.0d0*m/4.0d0/pi/rho_bar)**0.3333333333d0
-    tol2 = 1e-6
     !sig_2 = qromb(sig_2int,log(kmin),log(kmax),tol2)
     CALL qromb(sig_2int,log(kmin),dlog(kmax),sig_2,R)
 end function sig_2
@@ -35,8 +34,9 @@ real(dp) function sig_2int(lnk,R)
     real(dp),intent(in) :: lnk,R
     real(dp) :: k,P_lin
     k = exp(lnk)
-    P_lin = 1e9*k**(3.0)*exp(-sqrt(sqrt(k))*20.0)
-    sig_2int = (k**3.0d0/2.0d0/pi**2)*P_lin*w_top(k*R)**2
+    !P_lin = 1e9*k**(3.0)*exp(-sqrt(sqrt(k))*20.0)
+    P_lin = 2.077e4*exp(-((lnk+4.072)/1.205)**2)+1.682e4*exp(-((lnk+4.589)/2.23)**2)
+    sig_2int = (k**3.0d0/2.0d0/pi**2)*P_lin*win_top(k*R)**2
 end function sig_2int
 
 ! Calculate nu for mass m and redshift z.  Equation 57 of astro-ph/0206508.
@@ -46,13 +46,13 @@ real(dp) function nu(m)
 end function nu
 
 ! Calculate f_nu for mass m and redshift z. Equation 59 of astro-ph/0206508.
-real(dp) function fnu(m)
+real(dp) function nu_fnu(m)
     real(dp), intent(in) :: m
     real(dp):: A,q
     A = 0.3222d0
     q = 0.75d0
-    fnu=A*(1.0d0+(q*nu(m))**0.3)*(q*nu(m)/2.0d0/pi)**0.5*exp(-q*nu(m)/2.0d0)/nu(m)
-end function fnu
+    nu_fnu=A*(1.0d0+(q*nu(m))**0.3)*(q*nu(m)/2.0d0/pi)**0.5*exp(-q*nu(m)/2.0d0)
+end function nu_fnu
 
 ! Calculate the Fourier transform of the dark matter distribution u(k|m)
 ! Equation 81 & 82 of astro-ph/0206508
@@ -97,7 +97,7 @@ end function fnu
 
 
 ! Calculate the Fourier transform of the dark matter distribution u(k|m)
-! Equation 81 & 82 of astro-ph/0206508
+! Equation 80 & 74 of astro-ph/0206508
 real(dp) function ukm(k,m)
     real(dp), intent(in) :: k
     real(dp) :: m
@@ -109,15 +109,15 @@ real(dp) function ukm(k,m)
     cp = c+1.0
     zz  = k*rs
     x = 1e-2
-    CALL qromb(ukmi,x,rs,ukm,k)
-    ukm = 2.25*ukm/m
+    CALL qromb(ukmi,log(x),log(rs),ukm,k)
+    ukm = 2.25*ukm/m*2.0e11
 end function ukm
-
-real(dp) function ukmi(r,k)
-    real(dp), intent(in) :: r,k
-    real(dp) :: p
+real(dp) function ukmi(lnr,k)
+    real(dp), intent(in) :: lnr,k
+    real(dp) :: p,r
+    r = exp(lnr)
     p = 1.0/r/(1.0+r)**3
-    ukmi = 4.0*pi*r**2*sin(k*r)/(k*r)*p
+    ukmi = 4.0*pi*r**3*sin(k*r)/(k*r)*p
     !ukmi = 4.0*pi*r**2*sin(k*r)
 end function ukmi
 
@@ -162,7 +162,7 @@ real(dp) function P1hi(lnm,k)
     real(dp),intent(in) :: lnm
     real(dp) :: m,k
     m = exp(lnm)
-    P1hi = fnu(m)*(m/rho_bar)*ukm(k,m)**2
+    P1hi = m*nu_fnu(m)*ukm(k,m)**2
 end function P1hi
 
 ! Get 2-Halo Term
@@ -175,14 +175,14 @@ real(dp) function P2hi1(lnm)
     real(dp), intent(in) :: lnm
     real(dp) :: m
     m = exp(lnm)
-    P2hi1 = fnu(m)*ukm(kk,m)
+    P2hi1 = nu_fnu(m)*ukm(kk,m)
 end function P2hi1
 real(dp) function P2hi2(lnm)
     real(dp),intent(in) :: lnm
     real(dp) :: Phh,m
     Phh = 1.0
     m = exp(lnm)
-    P2hi2 = fnu(m)*ukm(kk,m)*Phh
+    P2hi2 = nu_fnu(m)*ukm(kk,m)*Phh
 end function P2hi2
 
 

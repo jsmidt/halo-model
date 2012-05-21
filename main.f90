@@ -71,9 +71,9 @@ z = 10.0
 !kk = 0.1
 !write(*,*) P2h(kk)
 
-!z = 1.0
+!z = 0.0
 !call linear_pk(k,Pk)
-!open(unit=10,file='matterpower10.dat',form='formatted',status='unknown')
+!open(unit=10,file='matterpower0.dat',form='formatted',status='unknown')
 !do i=1,mpts
 !    write(10,*) k(i),Pk(i)
 !end do
@@ -86,28 +86,19 @@ z = 10.0
 !end do
 !close(10)
 
-open(unit=10,file='hey.dat',form='formatted',status='unknown')
-kg = 6.0
+open(unit=10,file='sig_22.dat',form='formatted',status='unknown')
+kg = 2
 do i = 1,100
 m = 10**kg
-write(10,*) m, nu(m)*fnu(m),sig_2(m)
-kg = kg+0.07
+mm = 1.0e9
+write(10,*) m, sig_2(m)
+kg = kg+0.15
 end do
 close(10)
 
-kg = 1e-2
-mm = 1e11
-write(*,*) ukm(kg,mm)
 
-open(unit=10,file='hey2.dat',form='formatted',status='unknown')
-kg = -2
-do i = 1,40
-m = 10**kg
-mm = 1.0e11
-write(10,*) m, P1h(m)
-kg = kg+0.1
-end do
-close(10)
+
+
 
 
 
