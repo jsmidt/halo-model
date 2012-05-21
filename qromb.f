@@ -16,7 +16,7 @@ CU    USES polint,trapzd
         s(j+1)=s(j)
         h(j+1)=0.25d0*h(j)
 11    continue
-      pause 'too many steps in qromb'
+      write(*,*) 'too many steps in qromb'
       END
 C  (C) Copr. 1986-92 Numerical Recipes Software D041&0(9p#3.
       SUBROUTINE trapzd(func,a,b,s,n,q) ! one paramete
@@ -67,7 +67,7 @@ C  (C) Copr. 1986-92 Numerical Recipes Software D041&0(9p#3.
           hp=xa(i+m)-x
           w=c(i+1)-d(i)
           den=ho-hp
-          if(den.eq.0d0)pause 'failure in polint'
+          if(den.eq.0d0) write(*,*) 'failure in polint'
           den=w/den
           d(i)=hp*den
           c(i)=ho*den
