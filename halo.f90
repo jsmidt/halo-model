@@ -5,12 +5,12 @@ implicit none
 integer, parameter::dp = kind(1.0d0)
 real(dp), parameter:: kmin = 2.0e-4
 real(dp), parameter:: kmax = 9.610024d0
-real(dp), parameter:: mmin = 1e8
+real(dp), parameter:: mmin = 2e9
 real(dp), parameter:: mmax = 1e13
 real(dp), parameter:: dlnk = 0.07d0
 integer, parameter:: mpts = 155
 real(dp), parameter:: rho_bar = 1.0d0
-real(dp) :: R,z
+real(dp) :: z,kk
 
 contains
 
@@ -25,20 +25,19 @@ end function w_top
 ! Equation 58 of astro-ph/0206508.
 real(dp) function sig_2(m)
     real(dp),intent(in) :: m
-    real(dp) :: a,b,rombint
-    a = kmin
-    b = kmax
+    real(dp) :: rombint,tol2,R
     R = (3.0d0*m/4.0d0/pi/rho_bar)**0.3333333333d0
-    sig_2 = rombint(sig_2int,a,b,tol)
+    tol2 = 1e-6
+    !sig_2 = qromb(sig_2int,log(kmin),log(kmax),tol2)
+    CALL qromb(sig_2int,log(kmin),dlog(kmax),sig_2,R)
 end function sig_2
-real(dp) function sig_2int(k)
-    real(dp),intent(in) :: k
-    sig_2int = (k**2/2.0d0/pi**2)*P_lin(k)*w_top(k*R)**2
+real(dp) function sig_2int(lnk,R)
+    real(dp),intent(in) :: lnk,R
+    real(dp) :: k,P_lin
+    k = exp(lnk)
+    P_lin = 1e9*k**(3.0)*exp(-sqrt(sqrt(k))*20.0)
+    sig_2int = (k**3.0d0/2.0d0/pi**2)*P_lin*w_top(k*R)**2
 end function sig_2int
-real(dp) function P_lin(k)
-real(dp), intent(in) :: k
-P_lin = 2
-end function P_lin
 
 ! Calculate nu for mass m and redshift z.  Equation 57 of astro-ph/0206508.
 real(dp) function nu(m)
@@ -57,34 +56,76 @@ end function fnu
 
 ! Calculate the Fourier transform of the dark matter distribution u(k|m)
 ! Equation 81 & 82 of astro-ph/0206508
+!real(dp) function ukm(k,m)
+!    real(dp), intent(in) :: k
+!    real(dp) :: m
+!    real(dp) :: ps, rs,c,zz,cp
+!    real(dp) :: si_z,ci_z,si_cz,ci_cz
+!    ps = 1.0
+!    rs = 2e-5*(m)**0.3333
+!    c = 9.0/(1.0+z)*m**(-0.13)*90
+!    cp = c+1.0
+!    zz  = k*rs
+!    !ukm = 4.0d0*pi*ps*rs**3/m*(cos(zz)*Ci(zz))
+!    ukm = Ci(zz)
+!    !ukm = 4.0d0*pi*ps*rs**3/m*(sin(zz)*(Si(cp*zz)-Si(zz)) )
+!    !       - sin(c*zz)/(cp*zz)+cos(zz)*(Ci(cp*zz)-Ci(zz)) )
+!    !ukm = 4.0d0*pi*ps*rs**3/m*(sin(k*rs)*(Si((1.0d0+C)*k*rs)-Si(k*rs)) &
+!    !    - sin(c*k*rs)/((1.0d0+c)*k*rs)+cos(k*rs)*(Ci((1.0d0+C)*k*rs)-Ci(k*rs)))
+!end function ukm
+!real(dp) function Ci(x)
+!   real(dp), intent(in) :: x
+!   real(dp) :: rombint,maxa
+!   maxa = 1000.0
+!   !Ci = rombint(Cii,x,maxa,tol)
+!    CALL qromb(Cii,x,maxa,Ci)
+!end function Ci
+!real(dp) function Si(x)
+!   real(dp), intent(in) :: x
+!   real(dp) :: rombint,maxa
+!   maxa = 10000
+!   Si = rombint(Sii,x,maxa,tol)
+!end function Si
+!real(dp) function Cii(t)
+!   real(dp), intent(in) :: t
+!   Cii = -sin(t+3.14159/2.0)/t
+!end function Cii
+!real(dp) function Sii(t)
+!   real(dp), intent(in) :: t
+!   Sii = sin(t)/t
+!end function Sii
+
+
+! Calculate the Fourier transform of the dark matter distribution u(k|m)
+! Equation 81 & 82 of astro-ph/0206508
 real(dp) function ukm(k,m)
     real(dp), intent(in) :: k
     real(dp) :: m
-    real(dp) :: ps, rs,c 
+    real(dp) :: ps, rs,c,zz,cp
+    real(dp) :: si_z,ci_z,si_cz,ci_cz,x
     ps = 1.0
-    rs = 1.0
-    c = 1.0
-    ukm = 4.0d0*pi*ps*rs**3/m*(sin(k*rs)*(Si((1.0d0+C)*k*rs)-Si(k*rs)) &
-        - sin(c*k*rs)/((1.0d0+c)*k*rs)+cos(k*rs)*(Ci((1.0d0+C)*k*rs)-Ci(k*rs)))
+    rs = 2e-5*(m)**0.3333
+    c = 9.0/(1.0+z)*m**(-0.13)*90
+    cp = c+1.0
+    zz  = k*rs
+    x = 1e-2
+    CALL qromb(ukmi,x,rs,ukm,k)
+    ukm = 2.25*ukm/m
 end function ukm
-real(dp) function Ci(x)
-   real(dp), intent(in) :: x
-   real(dp) :: rombint
-   Ci = rombint(Cii,x,kmax,tol)
-end function Ci
-real(dp) function Si(x)
-   real(dp), intent(in) :: x
-   real(dp) :: rombint
-   Si = rombint(Sii,x,kmax,tol)
-end function Si
-real(dp) function Cii(t)
-   real(dp), intent(in) :: t
-   Cii = -cos(t)/t
-end function Cii
-real(dp) function Sii(t)
-   real(dp), intent(in) :: t
-   Sii = sin(t)/t
-end function Sii
+
+real(dp) function ukmi(r,k)
+    real(dp), intent(in) :: r,k
+    real(dp) :: p
+    p = 1.0/r/(1.0+r)**3
+    ukmi = 4.0*pi*r**2*sin(k*r)/(k*r)*p
+    !ukmi = 4.0*pi*r**2*sin(k*r)
+end function ukmi
+
+
+
+
+
+
 
 
 ! Get linear power spectrum Pk at k from CAMB. 
@@ -111,17 +152,38 @@ subroutine linear_pk(k,Pk)
 end subroutine linear_pk
 
 ! Get 1-Halo Term
-real(dp) function P1h(k)
-    real(dp), intent(in) :: k
+real(dp) function P1h(kg)
+    real(dp), intent(in) :: kg
     real(dp) :: rombint,tol2
-    tol2 = 1e-2
-    P1h = rombint(P1hi,mmin,mmax,tol2)
+    !P1h = rombint(P1hi,log(mmin),log(mmax),tol)
+    CALL qromb(P1hi,log(mmin),dlog(mmax),P1h,kg)
 end function P1h
-real(dp) function P1hi(m)
-    real(dp) :: m
-    real(dp) :: k
-    k = 1.0
-    P1hi = fnu(m)*(m/rho_bar)*ukm(k,m)**2
+real(dp) function P1hi(lnm,k)
+    real(dp),intent(in) :: lnm
+    real(dp) :: m,k
+    m = exp(lnm)
+    P1hi = nu(m)*fnu(m)*(m/rho_bar)*ukm(k,m)**2
 end function P1hi
+
+! Get 2-Halo Term
+real(dp) function P2h(kg)
+    real(dp), intent(in) :: kg
+    real(dp) :: rombint
+    P2h = rombint(P2hi1,log(mmin),log(mmax),tol) + rombint(P2hi2,log(mmin),log(mmax),tol)
+end function P2h
+real(dp) function P2hi1(lnm)
+    real(dp), intent(in) :: lnm
+    real(dp) :: m
+    m = exp(lnm)
+    P2hi1 = fnu(m)*ukm(kk,m)
+end function P2hi1
+real(dp) function P2hi2(lnm)
+    real(dp),intent(in) :: lnm
+    real(dp) :: Phh,m
+    Phh = 1.0
+    m = exp(lnm)
+    P2hi2 = fnu(m)*ukm(kk,m)*Phh
+end function P2hi2
+
 
 end module halo

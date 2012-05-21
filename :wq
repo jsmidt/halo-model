@@ -9,6 +9,8 @@ integer :: i
 z = 0.1
 m = 1.0
 
+write(*,*) w_top(m)
+write(*,*) sig_2(m)
 
 allocate(k(mpts),Pk(mpts))
 !z = 0.0
@@ -95,7 +97,7 @@ kg = kg+0.07
 end do
 close(10)
 
-kg = 1e-2
+kg = 1e-1
 mm = 1e11
 write(*,*) ukm(kg,mm)
 
@@ -104,7 +106,7 @@ kg = -2
 do i = 1,40
 m = 10**kg
 mm = 1.0e11
-write(10,*) m, ukm(m,mm)
+write(10,*) m, ukm(kg,mm)
 kg = kg+0.1
 end do
 close(10)
