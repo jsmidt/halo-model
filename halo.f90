@@ -162,7 +162,7 @@ real(dp) function P1hi(lnm,k)
     real(dp),intent(in) :: lnm
     real(dp) :: m,k
     m = exp(lnm)
-    P1hi = nu(m)*fnu(m)*(m/rho_bar)*ukm(k,m)**2
+    P1hi = fnu(m)*(m/rho_bar)*ukm(k,m)**2
 end function P1hi
 
 ! Get 2-Halo Term

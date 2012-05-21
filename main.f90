@@ -104,7 +104,7 @@ kg = -2
 do i = 1,40
 m = 10**kg
 mm = 1.0e11
-write(10,*) m, ukm(m,mm)
+write(10,*) m, P1h(m)
 kg = kg+0.1
 end do
 close(10)
