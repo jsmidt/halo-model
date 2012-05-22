@@ -6,19 +6,33 @@ real(dp) :: m,rombint,kg,mm
 real, allocatable,dimension(:) :: k,Pk
 integer :: i
 
-z = 0.1
-m = 1.0
+! Define cosmology
+omegab  = .045
+omegac  = 0.255
+omegam  = omegab+omegac
+omegal  = 0.7
+omegan  = 0
+H0      = 65
+YHe     = 0.24
+Num_Nu_massless =3.04
+Num_Nu_massive  =0
+
 
 
 allocate(k(mpts),Pk(mpts))
-!z = 0.0
-!call linear_pk(k,Pk)
+
 !open(unit=10,file='matterpower0.dat',form='formatted',status='unknown')
 !do i=1,mpts
 !    write(10,*) k(i),Pk(i)
 !end do
 !close(10)
 
+!kg = 8
+!do i = 1,40
+!m = 10**kg
+!write(*,*) m,nu(m),sig_2(m),nu_fnu(m)
+!kg = kg+0.1
+!end do
 !z = 0.1
 !call linear_pk(k,Pk)
 !open(unit=10,file='matterpower01.dat',form='formatted',status='unknown')
@@ -79,24 +93,14 @@ z = 10.0
 !end do
 !close(10)
 
-!open(unit=10,file='hey.dat',form='formatted',status='unknown')
-!do i=1,mpts
-!    kk = k(i)
-!    write(10,*) kk,P1h(kg),P2h(kg)
-!end do
-!close(10)
-
-open(unit=10,file='sig_22.dat',form='formatted',status='unknown')
-kg = 2
-do i = 1,100
-m = 10**kg
-mm = 1.0e9
-write(10,*) m, sig_2(m)
-kg = kg+0.15
+kk  = -2
+open(unit=10,file='hey.dat',form='formatted',status='unknown')
+do i=1,45
+    kg = 10**kk
+    write(10,*) kg,P1h(kg)
+    kk = kk+0.1
 end do
 close(10)
-
-
 
 
 

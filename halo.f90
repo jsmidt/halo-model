@@ -11,8 +11,10 @@ real(dp), parameter:: dlnk = 0.07d0
 integer, parameter:: mpts = 155
 real(dp), parameter:: rho_bar = 1.0d0
 real(dp) :: z,kk
+real(dp) :: omegab, omegac, omegal, omegan, H0, YHe, Num_Nu_massless, Num_Nu_massive, omegam
 
 contains
+
 
 ! Tophat window function. See eq. 58 of astro-ph/0206508.
 elemental real(dp) function win_top(x)
@@ -29,6 +31,7 @@ real(dp) function sig_2(m)
     R = (3.0d0*m/4.0d0/pi/rho_bar)**0.3333333333d0
     !sig_2 = qromb(sig_2int,log(kmin),log(kmax),tol2)
     CALL qromb(sig_2int,log(kmin),dlog(kmax),sig_2,R)
+    sig_2 = sig_2*R**2
 end function sig_2
 real(dp) function sig_2int(lnk,R)
     real(dp),intent(in) :: lnk,R
@@ -39,10 +42,23 @@ real(dp) function sig_2int(lnk,R)
     sig_2int = (k**3.0d0/2.0d0/pi**2)*P_lin*win_top(k*R)**2
 end function sig_2int
 
+! The growth Function normalized s.t. D(z=0) = 1. Eq. 25 of astro-ph/0206508.
+elemental real(dp) function growth(zz)
+    real(dp),intent(in) :: zz
+    real(dp) :: D,D0, omegamz, omegalz
+    omegamz = omegam*(1.0+z)**3/(omegam*(1.0+z)**3+omegal)
+    omegalz = 1.0-omegamz
+    D = 5.0d0/2.0d0*omegamz/(1.0d0+z) &
+        /(omegamz**(4.0/7.0d0)-omegalz+(1.0+0.5d0*omegamz)*(1.0+omegalz/70.0d0))
+    D0 = 5.0d0/2.0d0*omegam &
+        /(omegam**(4.0/7.0d0)-omegal+(1.0+0.5d0*omegam)*(1.0+omegal/70.0d0))
+    growth = D/D0
+end function growth
+
 ! Calculate nu for mass m and redshift z.  Equation 57 of astro-ph/0206508.
 real(dp) function nu(m)
     real(dp), intent(in) :: m
-    nu = 1.686470199841145d0*(1.0d0+z)*sig_2(m)
+    nu = (1.686470199841145d0/growth(z))**2/sig_2(m)
 end function nu
 
 ! Calculate f_nu for mass m and redshift z. Equation 59 of astro-ph/0206508.
@@ -143,11 +159,22 @@ subroutine linear_pk(k,Pk)
    call CAMB_SetDefParams(P%Params)
    P%Params%WantTransfer= .true.
    P%Params%Transfer%redshifts=z
+   P%Params%InitPower%ScalarPowerAmp(1) = 2.50e-9
+   P%Params%omegab  = omegab
+   P%Params%omegac  = omegac
+   P%Params%omegav  = omegal
+   P%Params%omegan  = omegan
+   P%Params%H0      = H0
+   P%Params%YHe     = 0.24
+   P%Params%Num_Nu_massless = Num_Nu_massless
+   P%Params%Num_Nu_massive  = Num_Nu_massive
+
+
 
    ! Get transfer functions and power spectra Pk
    call CAMB_GetTransfers(P%Params, P, error)
    call Transfer_GetMatterPower(P%MTrans,Pk,1,1,real(kmin),real(dlnk),mpts)
-   Pk = Pk/3.0e8
+   !Pk = Pk/3.0e8
 
 end subroutine linear_pk
 
@@ -162,7 +189,7 @@ real(dp) function P1hi(lnm,k)
     real(dp),intent(in) :: lnm
     real(dp) :: m,k
     m = exp(lnm)
-    P1hi = nu_fnu(m)*ukm(k,m)**2
+    P1hi = m*nu_fnu(m)*ukm(k,m)**2
 end function P1hi
 
 ! Get 2-Halo Term
