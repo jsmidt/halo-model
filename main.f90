@@ -2,21 +2,25 @@ program test
 use halo
 implicit none
 
-real(dp) :: m,rombint,kg,mm
+real(dp) :: m,rombint,kg,mm,mmm
 real, allocatable,dimension(:) :: k,Pk
 integer :: i
 
-! Define cosmology
-omegab  = .045
-omegac  = 0.255
+! Define cosmology (WMAP 7)
+omegab  = 0.045
+omegac  = 0.227
 omegam  = omegab+omegac
-omegal  = 0.7
+omegal  = 0.728
 omegan  = 0
-H0      = 65
+H0      = 70.2
 YHe     = 0.24
 Num_Nu_massless =3.04
 Num_Nu_massive  =0
 
+! To get the critical density rho_c we need to calculate 3H^2/(8\piG).  
+! We want units of M_\sun/Mpc^3. We know H0 has units of km/s/Mpc and 
+! G = 4.302e-9 Mpc(km/s)^2/M_\sun So that 3H^2/(8\piG) has the right units.
+rho_c = 3.0d0*H0**2/8.0d0/pi/4.302e-9
 
 
 allocate(k(mpts),Pk(mpts))
@@ -27,13 +31,12 @@ allocate(k(mpts),Pk(mpts))
 !end do
 !close(10)
 
-!kg = 8
-!do i = 1,40
+!kg = 2
+!do i = 1,150
 !m = 10**kg
 !write(*,*) m,nu(m),sig_2(m),nu_fnu(m)
 !kg = kg+0.1
 !end do
-!z = 0.1
 !call linear_pk(k,Pk)
 !open(unit=10,file='matterpower01.dat',form='formatted',status='unknown')
 !do i=1,mpts
@@ -101,6 +104,19 @@ do i=1,45
     kk = kk+0.1
 end do
 close(10)
+
+!kk  = -2
+!open(unit=10,file='hey.dat',form='formatted',status='unknown')
+!do i=1,45
+!    kg = 10**kk
+!    m = 1e9
+!    mm = 1e11
+!    mmm = 1e13
+!    write(10,*) kg,ukm(kg,m),ukm(kg,mm),ukm(kg,mmm)
+!    kk = kk+0.1
+!end do
+!close(10)
+
 
 
 

@@ -11,7 +11,7 @@ real(dp), parameter:: dlnk = 0.07d0
 integer, parameter:: mpts = 155
 real(dp), parameter:: rho_bar = 1.0d0
 real(dp) :: z,kk
-real(dp) :: omegab, omegac, omegal, omegan, H0, YHe, Num_Nu_massless, Num_Nu_massive, omegam
+real(dp) :: omegab, omegac, omegal, omegan, H0, YHe, Num_Nu_massless, Num_Nu_massive, omegam,rho_c
 
 contains
 
@@ -27,11 +27,9 @@ end function win_top
 ! Equation 58 of astro-ph/0206508.
 real(dp) function sig_2(m)
     real(dp),intent(in) :: m
-    real(dp) :: rombint,tol2,R
-    R = (3.0d0*m/4.0d0/pi/rho_bar)**0.3333333333d0
-    !sig_2 = qromb(sig_2int,log(kmin),log(kmax),tol2)
+    real(dp) :: rombint,R
+    R = (3.0d0*m/4.0d0/pi/rho_c)**0.3333333333d0
     CALL qromb(sig_2int,log(kmin),dlog(kmax),sig_2,R)
-    sig_2 = sig_2*R**2
 end function sig_2
 real(dp) function sig_2int(lnk,R)
     real(dp),intent(in) :: lnk,R
@@ -70,8 +68,8 @@ real(dp) function nu_fnu(m)
     nu_fnu=A*(1.0d0+(q*nu(m))**0.3)*(q*nu(m)/2.0d0/pi)**0.5*exp(-q*nu(m)/2.0d0)
 end function nu_fnu
 
-! Calculate the Fourier transform of the dark matter distribution u(k|m)
-! Equation 81 & 82 of astro-ph/0206508
+!! Calculate the Fourier transform of the dark matter distribution u(k|m)
+!! Equation 81 & 82 of astro-ph/0206508
 !real(dp) function ukm(k,m)
 !    real(dp), intent(in) :: k
 !    real(dp) :: m
@@ -82,33 +80,30 @@ end function nu_fnu
 !    c = 9.0/(1.0+z)*m**(-0.13)*90
 !    cp = c+1.0
 !    zz  = k*rs
-!    !ukm = 4.0d0*pi*ps*rs**3/m*(cos(zz)*Ci(zz))
-!    ukm = Ci(zz)
 !    !ukm = 4.0d0*pi*ps*rs**3/m*(sin(zz)*(Si(cp*zz)-Si(zz)) )
 !    !       - sin(c*zz)/(cp*zz)+cos(zz)*(Ci(cp*zz)-Ci(zz)) )
-!    !ukm = 4.0d0*pi*ps*rs**3/m*(sin(k*rs)*(Si((1.0d0+C)*k*rs)-Si(k*rs)) &
-!    !    - sin(c*k*rs)/((1.0d0+c)*k*rs)+cos(k*rs)*(Ci((1.0d0+C)*k*rs)-Ci(k*rs)))
+!    ukm = 4.0d0*pi*ps*rs**3/m*(sin(k*rs)*(Si((1.0d0+C)*k*rs)-Si(k*rs)) &
+!        - sin(c*k*rs)/((1.0d0+c)*k*rs)+cos(k*rs)*(Ci((1.0d0+C)*k*rs)-Ci(k*rs)))
 !end function ukm
 !real(dp) function Ci(x)
 !   real(dp), intent(in) :: x
 !   real(dp) :: rombint,maxa
 !   maxa = 1000.0
-!   !Ci = rombint(Cii,x,maxa,tol)
-!    CALL qromb(Cii,x,maxa,Ci)
+!   Ci = rombint(Cii,log(x),log(maxa),tol)
 !end function Ci
 !real(dp) function Si(x)
 !   real(dp), intent(in) :: x
 !   real(dp) :: rombint,maxa
 !   maxa = 10000
-!   Si = rombint(Sii,x,maxa,tol)
+!   Si = rombint(Sii,log(x),log(maxa),tol)
 !end function Si
 !real(dp) function Cii(t)
 !   real(dp), intent(in) :: t
-!   Cii = -sin(t+3.14159/2.0)/t
+!   Cii = cos(exp(t))
 !end function Cii
 !real(dp) function Sii(t)
 !   real(dp), intent(in) :: t
-!   Sii = sin(t)/t
+!   Sii = sin(exp(t))
 !end function Sii
 
 
