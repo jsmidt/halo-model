@@ -6,12 +6,12 @@ integer, parameter::dp = kind(1.0d0)
 real(dp), parameter:: kmin = 2.0e-4
 real(dp), parameter:: kmax = 9.610024d0
 real(dp), parameter:: mmin = 2e9
-real(dp), parameter:: mmax = 1e13
+real(dp), parameter:: mmax = 1e12
 real(dp), parameter:: dlnk = 0.07d0
 integer, parameter:: mpts = 155
 real(dp), parameter:: rho_bar = 1.0d0
 real(dp) :: z,kk,crv
-real(dp) :: omegab, omegac, omegal, omegan, H0, YHe, Num_Nu_massless, Num_Nu_massive, omegam,rho_c,r_s
+real(dp) :: omegab, omegac, omegal, omegan, H0, YHe, Num_Nu_massless, Num_Nu_massive, omegam,rho_c,r_s,kkkk
 
 contains
 
@@ -71,35 +71,32 @@ end function nu_fnu
 !! Calculate the Fourier transform of the dark matter distribution u(k|m)
 !! Equation 81 & 82 of astro-ph/0206508
 !real(dp) function ukm(k,m)
-!    real(dp), intent(in) :: k
-!    real(dp) :: m
-!    real(dp) :: ps, rs,c,zz,cp
-!    real(dp) :: si_z,ci_z,si_cz,ci_cz
-!    ps = 1.0
-!    rs = 2e-5*(m)**0.3333
-!    c = 9.0/(1.0+z)*m**(-0.13)*90
-!    cp = c+1.0
-!    zz  = k*rs
-!    !ukm = 4.0d0*pi*ps*rs**3/m*(sin(zz)*(Si(cp*zz)-Si(zz)) )
-!    !       - sin(c*zz)/(cp*zz)+cos(zz)*(Ci(cp*zz)-Ci(zz)) )
-!    ukm = 4.0d0*pi*ps*rs**3/m*(sin(k*rs)*(Si((1.0d0+C)*k*rs)-Si(k*rs)) &
-!        - sin(c*k*rs)/((1.0d0+c)*k*rs)+cos(k*rs)*(Ci((1.0d0+C)*k*rs)-Ci(k*rs)))
+!    real(dp), intent(in) :: k,m
+!    real(dp) :: x,delta_c,r_vir,p_s,gg,c
+!
+!    ! Consentration parameter. Eq. 78 of astro-ph/0206508
+!    c = 9.0/(1.0+z)*(m/4.822e13)**(-0.13)
+!    r_s = (m/4.0/pi/rho_c/(log(1.0+c)-c/(1.0+c)))**0.3333333d0
+!
+!    !ukm = 4.0d0*pi*rho_c*r_s**3/m*(sin(k*r_s)*(Si((1.0d0+c)*k*r_s)-Si(k*r_s)) &
+!    !- sin(c*k*r_s)/((1.0d0+c)*k*r_s)+cos(k*r_s)*(Ci((1.0d0+c)*k*r_s)-Ci(k*r_s)))
+!    ukm = Ci(k*r_s)
 !end function ukm
 !real(dp) function Ci(x)
 !   real(dp), intent(in) :: x
 !   real(dp) :: rombint,maxa
-!   maxa = 1000.0
+!   maxa = 30000.0
 !   Ci = rombint(Cii,log(x),log(maxa),tol)
 !end function Ci
 !real(dp) function Si(x)
 !   real(dp), intent(in) :: x
 !   real(dp) :: rombint,maxa
-!   maxa = 10000
-!   Si = rombint(Sii,log(x),log(maxa),tol)
+!   maxa = 1e-10
+!   Si = rombint(Sii,log(maxa),log(x),tol)
 !end function Si
 !real(dp) function Cii(t)
 !   real(dp), intent(in) :: t
-!   Cii = cos(exp(t))
+!   Cii = -cos(exp(t))
 !end function Cii
 !real(dp) function Sii(t)
 !   real(dp), intent(in) :: t
@@ -111,39 +108,35 @@ end function nu_fnu
 ! Equation 80 & 74 of astro-ph/0206508
 real(dp) function ukm(k,m)
     real(dp), intent(in) :: k
-    real(dp) :: x,delta_c,r_vir,p_s,c,m,gg
+    real(dp) :: x,delta_c,r_vir,p_s,c,m,gg,rombint,Ez2
 
     ! Consentration parameter. Eq. 78 of astro-ph/0206508
-    c = 9.0/(1.0+z)*(m/4.822e13)**(-0.13)
-    r_s = (m/4.0/pi/rho_c/(log(1.0+c)-c/(1.0+c)))**0.33333
+    c = 9.0/(1.0+z)*(m/4.822e13)**(-0.13d0)
 
-    ! \Delta_c. Eq. 6 of arxiv:0907.4387
+    ! \Delta_c & E(z)^2. Eq. 5-6 of arxiv:0907.4387
     x = omegam*(1.0+z)**3/(omegam*(1.0+z)**3+omegal)-1.0d0
-    delta_c = 18.8*pi**2+82.0*x+39.0*x**2
+    delta_c = 18.0*pi**2+82.0*x-39.0*x**2
+    Ez2 = omegam*(1.0+z)**3+omegal
 
     ! Virial radius. Eq. 4 of arxiv:0907.4387
-    r_vir = c*r_s
+    r_vir = (3.0*m/(rho_c*Ez2*4.0*pi*delta_c))**(1.0/3.0)
 
-    ! p_s.  Eq. 3 of arxiv:0907.4387
-    !p_s = c**3*m/(4.0*pi*r_vir**3)/(log(1.0+c)-c/(1.0+c))
-    !crv =  c/r_vir
+    ! r_s = r_vir/c.  Above eq. 77 of astro-ph/0206508
+    r_s = r_vir/c
 
-    ! Want change of variables from r -> c*r/r_vir so that Eq. 1
-    ! of arxiv:0907.4387 becomes simple p_s/r/(1+r)^2.  This means we
-    ! ar integrating to c and integral must be multiplied by an additional
-    ! p_s*c**3/r_vir**3
-    !r_vir = 0.1
-    gg = 1e-6
+    ! p_s  Eq. 3 of arxiv:0907.4387
+    p_s = c**3*m/(4.0*pi*r_vir**3)/(log(1.0+c)-c/(1.0+c))
+
+    gg = 1.0e-4
     CALL qromb(ukmi,log(gg),log(r_vir),ukm,k)
-    ukm = ukm/m
+    ukm = p_s*ukm/m
 end function ukm
 real(dp) function ukmi(lnr,k)
     real(dp), intent(in) :: lnr,k
     real(dp) :: p,r
     r = exp(lnr)
-    p = rho_c/(r/r_s)/(1.0+(r/r_s))**2
+    p = 1.0/(r/r_s)/(1.0+(r/r_s))**2
     ukmi = 4.0*pi*r**3*sin(k*r)/(k*r)*p
-    !ukmi = 4.0*pi*r**3*p
 end function ukmi
 
 
@@ -174,12 +167,9 @@ subroutine linear_pk(k,Pk)
    P%Params%Num_Nu_massless = Num_Nu_massless
    P%Params%Num_Nu_massive  = Num_Nu_massive
 
-
-
    ! Get transfer functions and power spectra Pk
    call CAMB_GetTransfers(P%Params, P, error)
    call Transfer_GetMatterPower(P%MTrans,Pk,1,1,real(kmin),real(dlnk),mpts)
-   !Pk = Pk/3.0e8
 
 end subroutine linear_pk
 

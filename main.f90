@@ -22,7 +22,6 @@ Num_Nu_massive  =0
 ! G = 4.302e-9 Mpc(km/s)^2/M_\sun So that 3H^2/(8\piG) has the right units.
 rho_c = 3.0d0*H0**2/8.0d0/pi/4.302e-9
 
-
 allocate(k(mpts),Pk(mpts))
 
 !open(unit=10,file='matterpower0.dat',form='formatted',status='unknown')
@@ -104,14 +103,14 @@ do i=1,40
     kk = kk+0.1
 end do
 close(10)
-!kk  = -2
+kk  = -2
 !open(unit=10,file='hey.dat',form='formatted',status='unknown')
-!do i=1,50
+!do i=1,56
 !    kg = 10**kk
 !    m = 1e11
 !    mm = 1e13
 !    mmm = 1e16
-!    write(10,*) kg,ukm(kg,m),ukm(kg,mm)
+!    write(*,*) kg,ukm(kg,m),ukm(kg,mm),ukm(kg,mmm)
 !    kk = kk+0.1
 !end do
 !close(10)
