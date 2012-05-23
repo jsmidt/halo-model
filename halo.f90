@@ -10,8 +10,8 @@ real(dp), parameter:: mmax = 1e13
 real(dp), parameter:: dlnk = 0.07d0
 integer, parameter:: mpts = 155
 real(dp), parameter:: rho_bar = 1.0d0
-real(dp) :: z,kk
-real(dp) :: omegab, omegac, omegal, omegan, H0, YHe, Num_Nu_massless, Num_Nu_massive, omegam,rho_c
+real(dp) :: z,kk,crv
+real(dp) :: omegab, omegac, omegal, omegan, H0, YHe, Num_Nu_massless, Num_Nu_massive, omegam,rho_c,r_s
 
 contains
 
@@ -111,30 +111,40 @@ end function nu_fnu
 ! Equation 80 & 74 of astro-ph/0206508
 real(dp) function ukm(k,m)
     real(dp), intent(in) :: k
-    real(dp) :: m
-    real(dp) :: ps, rs,c,zz,cp
-    real(dp) :: si_z,ci_z,si_cz,ci_cz,x
-    ps = 1.0
-    rs = 2e-5*(m)**0.3333
-    c = 9.0/(1.0+z)*m**(-0.13)*90
-    cp = c+1.0
-    zz  = k*rs
-    x = 1e-2
-    CALL qromb(ukmi,log(x),log(rs),ukm,k)
-    ukm = 2.25*ukm/m*2.0e11
+    real(dp) :: x,delta_c,r_vir,p_s,c,m,gg
+
+    ! Consentration parameter. Eq. 78 of astro-ph/0206508
+    c = 9.0/(1.0+z)*(m/4.822e13)**(-0.13)
+    r_s = (m/4.0/pi/rho_c/(log(1.0+c)-c/(1.0+c)))**0.33333
+
+    ! \Delta_c. Eq. 6 of arxiv:0907.4387
+    x = omegam*(1.0+z)**3/(omegam*(1.0+z)**3+omegal)-1.0d0
+    delta_c = 18.8*pi**2+82.0*x+39.0*x**2
+
+    ! Virial radius. Eq. 4 of arxiv:0907.4387
+    r_vir = c*r_s
+
+    ! p_s.  Eq. 3 of arxiv:0907.4387
+    !p_s = c**3*m/(4.0*pi*r_vir**3)/(log(1.0+c)-c/(1.0+c))
+    !crv =  c/r_vir
+
+    ! Want change of variables from r -> c*r/r_vir so that Eq. 1
+    ! of arxiv:0907.4387 becomes simple p_s/r/(1+r)^2.  This means we
+    ! ar integrating to c and integral must be multiplied by an additional
+    ! p_s*c**3/r_vir**3
+    !r_vir = 0.1
+    gg = 1e-6
+    CALL qromb(ukmi,log(gg),log(r_vir),ukm,k)
+    ukm = ukm/m
 end function ukm
 real(dp) function ukmi(lnr,k)
     real(dp), intent(in) :: lnr,k
     real(dp) :: p,r
     r = exp(lnr)
-    p = 1.0/r/(1.0+r)**3
+    p = rho_c/(r/r_s)/(1.0+(r/r_s))**2
     ukmi = 4.0*pi*r**3*sin(k*r)/(k*r)*p
-    !ukmi = 4.0*pi*r**2*sin(k*r)
+    !ukmi = 4.0*pi*r**3*p
 end function ukmi
-
-
-
-
 
 
 
@@ -184,7 +194,7 @@ real(dp) function P1hi(lnm,k)
     real(dp),intent(in) :: lnm
     real(dp) :: m,k
     m = exp(lnm)
-    P1hi = m*nu_fnu(m)*ukm(k,m)**2
+    P1hi = m/rho_c*nu_fnu(m)*ukm(k,m)**2
 end function P1hi
 
 ! Get 2-Halo Term

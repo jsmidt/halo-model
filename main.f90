@@ -53,7 +53,6 @@ allocate(k(mpts),Pk(mpts))
 !end do
 !close(10)
 
-z = 10.0
 !call linear_pk(k,Pk)
 !open(unit=10,file='matterpower10.dat',form='formatted',status='unknown')
 !do i=1,mpts
@@ -96,23 +95,23 @@ z = 10.0
 !end do
 !close(10)
 
+z = 0
 kk  = -2
 open(unit=10,file='hey.dat',form='formatted',status='unknown')
-do i=1,45
+do i=1,40
     kg = 10**kk
     write(10,*) kg,P1h(kg)
     kk = kk+0.1
 end do
 close(10)
-
 !kk  = -2
 !open(unit=10,file='hey.dat',form='formatted',status='unknown')
-!do i=1,45
+!do i=1,50
 !    kg = 10**kk
-!    m = 1e9
-!    mm = 1e11
-!    mmm = 1e13
-!    write(10,*) kg,ukm(kg,m),ukm(kg,mm),ukm(kg,mmm)
+!    m = 1e11
+!    mm = 1e13
+!    mmm = 1e16
+!    write(10,*) kg,ukm(kg,m),ukm(kg,mm)
 !    kk = kk+0.1
 !end do
 !close(10)
