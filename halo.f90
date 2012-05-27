@@ -9,7 +9,7 @@ implicit none
 !integer,parameter :: dp = selected_real_kind(p=15,r=307)
 !
 real(dl), parameter:: kmin = 2.0e-4
-real(dl), parameter:: kmax = 2106.0d0
+real(dl), parameter:: kmax = 2000.0d0
 real(dl), parameter:: mmin = 2e9
 real(dl), parameter:: mmax = 1e12
 real(dl), parameter:: dlnk = 0.105d0
@@ -21,6 +21,26 @@ real(dl), parameter:: rho_bar = 1.0d0
 
 contains
 
+subroutine init_halo()
+    real(dl) :: lnm,m
+    integer :: i,N
+    N = 190
+    allocate(hm%m(N),hm%sig_2(N),hm%nu(N),hm%nu_fnu(N),hm%bias_1(N),hm%bias_2(N))
+    lnm = 2
+    open(unit=10,file='nu_fnu.dat',form='formatted',status='unknown')
+    do i = 1,N
+        m = 10**lnm
+        hm%m(i) = m
+        hm%sig_2(i) = sig_2(m)
+        hm%nu(i) = nu(m)
+        hm%nu_fnu(i) = nu_fnu(m)
+        hm%bias_1(i) = bias_1(m)
+        hm%bias_1(i) = bias_2(m)
+        write(10,'(4Es12.4)') hm%m(i), hm%sig_2(i),hm%nu(i), hm%nu_fnu(i),hm%bias_1(i),hm%bias_2(i)
+        lnm = lnm+0.08
+    end do
+    close(10)
+end subroutine init_halo
 
 ! Tophat window function. See eq. 58 of astro-ph/0206508.
 elemental real(dl) function win_top(x)
@@ -34,7 +54,7 @@ end function win_top
 real(dl) function sig_2(m)
     real(dl),intent(in) :: m
     real(dl) :: rombint,R
-    R = (3.0d0*m/4.0d0/pi/hm%rho_c)**0.3333333333d0
+    R = (3.0d0*m/4.0d0/pi/hm%rho_c/0.3d0)**0.3333333333d0
     CALL qromb(sig_2int,log(kmin),dlog(kmax),sig_2,R)
 end function sig_2
 real(dl) function sig_2int(lnk,R)
@@ -95,8 +115,8 @@ p = 0.3
 ep1 = (q*nu(m)-1.0)/(1.686470199841145d0/growth(hm%z))
 ep2 = (q*nu(m))*(q*nu(m)-3.0)/(1.686470199841145d0/growth(hm%z))**2
 E1  = 2.0*p/(1.686470199841145d0/growth(hm%z))/(1.0+(q*nu(m))**p)
-E2  = E1*(1.0+2.0*p)/(1.686470199841145d0/growth(hm%z))+2*ep1
-bias_2 = 2.0*(1.0+1.0)*(ep1+E1)+ep2+E2
+E2  = E1*((1.0+2.0*p)/(1.686470199841145d0/growth(hm%z))+2*ep1)
+bias_2 = 2.0*(1.0-17.0/21.0)*(ep1+E1)+ep2+E2
 end function bias_2
 
 
@@ -105,12 +125,13 @@ end function bias_2
 ! Equation 80 & 74 of astro-ph/0206508
 real(dl) function ukm(k,m)
     real(dl), intent(in) :: k
-    real(dl) :: x,delta_c,r_vir,p_s,c,m,gg,rombint,Ez2,omegam,omegal
+    real(dl) :: x,delta_c,r_vir,p_s,c,m,gg,rombint,Ez2,omegam,omegal,ms
     omegam = hm%Params%omegab + hm%Params%omegac
     omegal = hm%Params%omegan
 
     ! Consentration parameter. Eq. 78 of astro-ph/0206508
-    c = 9.0/(1.0+hm%z)*(m/1.259e13)**(-0.13d0)
+    ms = interpf(log(hm%nu),hm%m,log(1.0d0))
+    c = 9.0/(1.0+hm%z)*(m/ms)**(-0.13d0)
 
     ! \Delta_c & E(z)^2. Eq. 5-6 of arxiv:0907.4387
     x = omegam*(1.0+hm%z)**3/(omegam*(1.0+hm%z)**3+omegal)-1.0d0
@@ -137,8 +158,6 @@ real(dl) function ukmi(lnr,k)
     p = 1.0/(r/hm%r_s)/(1.0+(r/hm%r_s))**2
     ukmi = 4.0*pi*r**3*sin(k*r)/(k*r)*p
 end function ukmi
-
-
 
 
 ! Get linear power spectrum Pk at k from CAMB. 
@@ -168,9 +187,11 @@ real(dl) function P1h(kg)
 end function P1h
 real(dl) function P1hi(lnm,k)
     real(dl),intent(in) :: lnm
-    real(dl) :: m,k
+    real(dl) :: m,k,inu_fnu
     m = exp(lnm)
-    P1hi = m/hm%rho_c*nu_fnu(m)*ukm(k,m)**2
+    inu_fnu = interpf(log(hm%m),hm%nu_fnu,lnm)
+    P1hi = m/hm%rho_c*inu_fnu*ukm(k,m)**2
+    !P1hi = m/hm%rho_c*nu_fnu(m)*ukm(k,m)**2
 end function P1hi
 
 ! Get 2-Halo Term
@@ -181,16 +202,21 @@ real(dl) function P2h(kg)
 end function P2h
 real(dl) function P2h_int1(lnm,kg)
     real(dl), intent(in) :: lnm,kg
-    real(dl) :: m
+    real(dl) :: m,inu_fnu,ibias_1
     m = exp(lnm)
+    inu_fnu = interpf(log(hm%m),hm%nu_fnu,lnm)
+    ibias_1 = interpf(log(hm%m),hm%bias_1,lnm)
     CALL qromb(P2h_int2,log(mmin),dlog(mmax),P2h_int1,kg)
-    P2h_int1 = bias_1(m)*nu_fnu(m)*ukm(kg,m)*P2h_int1
+    P2h_int1 = ibias_1*inu_fnu*ukm(kg,m)*P2h_int1
 end function P2h_int1
 real(dl) function P2h_int2(lnm,kg)
     real(dl),intent(in) :: lnm,kg
-    real(dl) :: m
+    real(dl) :: m,inu_fnu,ibias_2
     m = exp(lnm)
-    P2h_int2 = bias_2(m)*nu_fnu(m)*ukm(kg,m)*interpf(log(hm%k),dble(hm%Pk),log(kg))
+    inu_fnu = interpf(log(hm%m),hm%nu_fnu,lnm)
+    ibias_2 = interpf(log(hm%m),hm%bias_2,lnm)
+    P2h_int2 = inu_fnu*ukm(kg,m)*interpf(log(hm%k),dble(hm%Pk),log(kg))
+    !P2h_int2 = bias_2(m)*nu_fnu(m)*ukm(kg,m)*interpf(log(hm%k),dble(hm%Pk),log(kg))
 end function P2h_int2
 
 

@@ -28,21 +28,13 @@ allocate(hm%k(mpts),hm%Pk(mpts))
 allocate(xx(10),yy(10))
 call init_params()
 call linear_pk(hm%k,hm%Pk)
-
-do i = 1,10
-   xx(i) = i
-   yy(i) = xx(i)**2
-enddo
-
-!stop
-!write(*,*) xx
-!write(*,*) interpf(xx,yy,dble(2.5))
-!m = 1e9
-!write(*,*) sig_2(m)
+call init_halo()
 
 
 
-open(unit=10,file='matterpower0.dat',form='formatted',status='unknown')
+
+
+open(unit=10,file='hey.dat',form='formatted',status='unknown')
 !do i=1,mpts
 !    write(10,*) k(i),Pk(i)
 !end do
@@ -51,7 +43,7 @@ open(unit=10,file='matterpower0.dat',form='formatted',status='unknown')
 !kg = 2
 !do i = 1,150
 !m = 10**kg
-!write(10,*) m,nu(m),sig_2(m),nu_fnu(m)
+!write(10,*) m,sig_2(m),nu(m),nu_fnu(m),bias_1(m),bias_2(m)
 !kg = kg+0.1
 !end do
 !call linear_pk(k,Pk)
@@ -121,31 +113,15 @@ open(unit=10,file='matterpower0.dat',form='formatted',status='unknown')
 !end do
 !
 !stop
-kk  = -3
+kk  = -4
 open(unit=10,file='hey.dat',form='formatted',status='unknown')
-do i=1,20
+do i=1,50
     kg = 10**kk
-    !write(*,*) kg
+    write(*,*) kg
     !write(10,*) kg,P2h(kg),interpf(log(hm%kg),dble(hm%Pk),log(kgg)),P1h(kg)
-    write(*,*) kg,interpf(hm%k,dble(hm%Pk),kg),P1h(kg),P2h(kg)
+    write(10,*) kg,interpf(hm%k,dble(hm%Pk),kg),P1h(kg),P2h(kg)
     kk = kk+0.15
 end do
-!close(10)
-!kk  = -2
-!open(unit=10,file='hey.dat',form='formatted',status='unknown')
-!do i=1,56
-!    kg = 10**kk
-!    m = 1e11
-!    mm = 1e13
-!    mmm = 1e16
-!    write(*,*) kg,ukm(kg,m),ukm(kg,mm),ukm(kg,mmm)
-!    kk = kk+0.1
-!end do
-!close(10)
-
-
-
-
 
 
 end program test

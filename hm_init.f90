@@ -11,7 +11,7 @@ type, extends(CAMBdata) :: HMdata
    real(dl) :: rho_c
    real(dl) :: r_s
    real(dl) :: z
-   real(dl), allocatable,dimension(:) :: k
+   real(dl), allocatable,dimension(:) :: k,m,nu_fnu,nu,sig_2,bias_1,bias_2
    real(sp), allocatable,dimension(:) :: Pk
 end type HMdata
 
@@ -43,7 +43,6 @@ subroutine init_params()
     ! We want units of M_\sun/Mpc^3. We know H0 has units of km/s/Mpc and 
     ! G = 4.302e-9 Mpc(km/s)^2/M_\sun So that 3H^2/(8\piG) has the right units.
     hm%rho_c = 3.0d0*hm%Params%H0**2/8.0d0/pi/4.302e-9
-    write(*,*) "hello ", hm%rho_c
 end subroutine init_params
 
 end module hm_init
