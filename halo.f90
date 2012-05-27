@@ -10,8 +10,8 @@ implicit none
 !
 real(dl), parameter:: kmin = 2.0e-4
 real(dl), parameter:: kmax = 2000.0d0
-real(dl), parameter:: mmin = 2e9
-real(dl), parameter:: mmax = 1e12
+real(dl), parameter:: mmin = 2e8
+real(dl), parameter:: mmax = 1e17
 real(dl), parameter:: dlnk = 0.105d0
 integer, parameter:: mpts = 160
 real(dl), parameter:: rho_bar = 1.0d0
@@ -27,7 +27,7 @@ subroutine init_halo()
     N = 190
     allocate(hm%m(N),hm%sig_2(N),hm%nu(N),hm%nu_fnu(N),hm%bias_1(N),hm%bias_2(N))
     lnm = 2
-    open(unit=10,file='nu_fnu.dat',form='formatted',status='unknown')
+    open(unit=10,file='output/nu_fnu.dat',form='formatted',status='unknown')
     do i = 1,N
         m = 10**lnm
         hm%m(i) = m
@@ -36,10 +36,19 @@ subroutine init_halo()
         hm%nu_fnu(i) = nu_fnu(m)
         hm%bias_1(i) = bias_1(m)
         hm%bias_1(i) = bias_2(m)
-        write(10,'(4Es12.4)') hm%m(i), hm%sig_2(i),hm%nu(i), hm%nu_fnu(i),hm%bias_1(i),hm%bias_2(i)
+        write(10,'(6Es12.3)') hm%m(i), hm%sig_2(i),hm%nu(i), hm%nu_fnu(i), hm%bias_1(i), hm%bias_2(i)
         lnm = lnm+0.08
     end do
     close(10)
+
+    ! Write out redshift and cosmology being used
+    write(*,*) ' ' 
+    write(*,'("   Halo model initialized for redshift z = ", F4.2, ". With cosmology:")') hm%z
+    write(*,'("   \Omega_b = ", F5.3, ". \Omega_c = ", F5.3, ". \Omega_l = ", &
+    F5.3, ". \Omega_nu = ", F5.3)') hm%Params%omegab,hm%Params%omegac,hm%Params%omegav,hm%Params%omegan
+    write(*,'("    H_0 = ", F4.1, ". Num_Nu_massless = ", F4.2, ". Num_Nu_massive = ", &
+    F4.2, ". YHe = ", F4.2)') hm%Params%H0,hm%Params%Num_Nu_massless,real(hm%Params%Num_Nu_massive),hm%Params%YHe
+    write(*,*) ' ' 
 end subroutine init_halo
 
 ! Tophat window function. See eq. 58 of astro-ph/0206508.
@@ -53,8 +62,11 @@ end function win_top
 ! Equation 58 of astro-ph/0206508.
 real(dl) function sig_2(m)
     real(dl),intent(in) :: m
-    real(dl) :: rombint,R
-    R = (3.0d0*m/4.0d0/pi/hm%rho_c/0.3d0)**0.3333333333d0
+    real(dl) :: rombint,R,omegam,omegal,omegamz
+    omegam = hm%Params%omegab + hm%Params%omegac
+    omegal = hm%Params%omegav
+    omegamz = omegam*(1.0+hm%z)**3/(omegam*(1.0+hm%z)**3+omegal)
+    R = (3.0d0*m/4.0d0/pi/hm%rho_c/omegamz)**0.3333333333d0
     CALL qromb(sig_2int,log(kmin),dlog(kmax),sig_2,R)
 end function sig_2
 real(dl) function sig_2int(lnk,R)
@@ -130,7 +142,8 @@ real(dl) function ukm(k,m)
     omegal = hm%Params%omegan
 
     ! Consentration parameter. Eq. 78 of astro-ph/0206508
-    ms = interpf(log(hm%nu),hm%m,log(1.0d0))
+    !ms = interpf(log(hm%nu),hm%m,log(1.0d0))
+    ms = 2.0d13
     c = 9.0/(1.0+hm%z)*(m/ms)**(-0.13d0)
 
     ! \Delta_c & E(z)^2. Eq. 5-6 of arxiv:0907.4387
@@ -198,7 +211,8 @@ end function P1hi
 real(dl) function P2h(kg)
     real(dl), intent(in) :: kg
     real(dl) :: rombint
-    CALL qromb(P2h_int1,log(mmin),dlog(mmax),P2h,kg)
+    !CALL qromb(P2h_int1,log(mmin),dlog(mmax),P2h,kg)
+    P2h = 0
 end function P2h
 real(dl) function P2h_int1(lnm,kg)
     real(dl), intent(in) :: lnm,kg

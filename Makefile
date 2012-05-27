@@ -28,4 +28,4 @@ halo: $(OBJ) ../camb/libcamb.a
 	$(F90C) $(F90FLAGS) -c $*.F90
 
 clean:
-	-rm -f *.o *.a *.dat *.x core *.mod
+	-rm -f *.o *.a *.dat *.x core *.mod output/*.dat
