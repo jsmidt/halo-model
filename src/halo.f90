@@ -27,7 +27,7 @@ subroutine init_halo()
     N = 190
     allocate(hm%m(N),hm%sig_2(N),hm%nu(N),hm%nu_fnu(N),hm%bias_1(N),hm%bias_2(N))
     lnm = 2
-    open(unit=10,file='output/nu_fnu.dat',form='formatted',status='unknown')
+    open(unit=10,file='output/' // trim(hm%run_name) // '_nu_fnu.dat',form='formatted',status='unknown')
     do i = 1,N
         m = 10**lnm
         hm%m(i) = m

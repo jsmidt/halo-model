@@ -13,6 +13,7 @@ type, extends(CAMBdata) :: HMdata
    real(dl) :: z
    real(dl), allocatable,dimension(:) :: k,m,nu_fnu,nu,sig_2,bias_1,bias_2
    real(sp), allocatable,dimension(:) :: Pk
+   character*8 :: run_name 
 end type HMdata
 
 type(HMdata) :: hm
@@ -24,6 +25,7 @@ subroutine init_params()
     ! Get Default Cosmology Parameters. Match to WMAP 7.
     call CAMB_SetDefParams(hm%Params)
 
+    hm%run_name = 'test'
     hm%z = 0.0
     hm%Params%WantTransfer= .true.
     hm%Params%WantCls= .false.
