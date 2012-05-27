@@ -111,12 +111,24 @@ open(unit=10,file='matterpower0.dat',form='formatted',status='unknown')
 !end do
 !close(10)
 
-kk  = -2
+!kk  = -2
+!open(unit=10,file='hey.dat',form='formatted',status='unknown')
+!do i=1,size(hm%k)
+!    kg = 10**kk
+!    write(*,*) hm%k(i)
+!    write(10,*) hm%k(i),interpf(log(hm%k),dble(hm%Pk),log(hm%k(i))),hm%Pk(i)
+!    kk = kk+0.1
+!end do
+!
+!stop
+kk  = -3
 open(unit=10,file='hey.dat',form='formatted',status='unknown')
-do i=1,40
+do i=1,20
     kg = 10**kk
-    write(10,*) kg,P1h(kg)
-    kk = kk+0.1
+    !write(*,*) kg
+    !write(10,*) kg,P2h(kg),interpf(log(hm%kg),dble(hm%Pk),log(kgg)),P1h(kg)
+    write(*,*) kg,interpf(hm%k,dble(hm%Pk),kg),P1h(kg),P2h(kg)
+    kk = kk+0.15
 end do
 !close(10)
 !kk  = -2

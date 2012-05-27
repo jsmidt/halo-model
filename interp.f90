@@ -98,7 +98,7 @@ end function interpf
      endif
 
      h=xa(khi)-xa(klo)
-     if (h.eq.0.) write(*,*) 'bad xa input in splint'
+     !if (h.eq.0.) write(*,*) 'bad xa input in splint'
 
      a=(xa(khi)-x)/h
      b=(x-xa(klo))/h

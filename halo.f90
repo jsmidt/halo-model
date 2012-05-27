@@ -9,11 +9,11 @@ implicit none
 !integer,parameter :: dp = selected_real_kind(p=15,r=307)
 !
 real(dl), parameter:: kmin = 2.0e-4
-real(dl), parameter:: kmax = 9.610024d0
+real(dl), parameter:: kmax = 2106.0d0
 real(dl), parameter:: mmin = 2e9
 real(dl), parameter:: mmax = 1e12
-real(dl), parameter:: dlnk = 0.07d0
-integer, parameter:: mpts = 155
+real(dl), parameter:: dlnk = 0.105d0
+integer, parameter:: mpts = 160
 real(dl), parameter:: rho_bar = 1.0d0
 !real(dl) :: z,kk,crv
 !real(dl) :: omegab, omegac, omegal, omegan, H0, YHe, Num_Nu_massless, Num_Nu_massive, omegam,rho_c,r_s,kkkk
@@ -42,8 +42,6 @@ real(dl) function sig_2int(lnk,R)
     real(dl) :: k,P_lin
     k = exp(lnk)
     P_lin = interpf(log(hm%k),dble(hm%Pk),lnk)
-    !P_lin = 2.077e4*exp(-((lnk+4.072)/1.205)**2)+1.682e4*exp(-((lnk+4.589)/2.23)**2)
-    !P_lin = 2.077e4*exp(-((lnk+4.072)/1.205)**2)+1.682e4*exp(-((lnk+4.589)/2.23)**2)
     sig_2int = (k**3.0d0/2.0d0/pi**2)*P_lin*win_top(k*R)**2
 end function sig_2int
 
@@ -79,57 +77,45 @@ real(dl) function nu_fnu(m)
     nu_fnu=A*(1.0d0+(q*nu(m))**0.3)*(q*nu(m)/2.0d0/pi)**0.5*exp(-q*nu(m)/2.0d0)
 end function nu_fnu
 
-!! Calculate the Fourier transform of the dark matter distribution u(k|m)
-!! Equation 81 & 82 of astro-ph/0206508
-!real(dl) function ukm(k,m)
-!    real(dl), intent(in) :: k,m
-!    real(dl) :: x,delta_c,r_vir,p_s,gg,c
-!
-!    ! Consentration parameter. Eq. 78 of astro-ph/0206508
-!    c = 9.0/(1.0+z)*(m/4.822e13)**(-0.13)
-!    r_s = (m/4.0/pi/rho_c/(log(1.0+c)-c/(1.0+c)))**0.3333333d0
-!
-!    !ukm = 4.0d0*pi*rho_c*r_s**3/m*(sin(k*r_s)*(Si((1.0d0+c)*k*r_s)-Si(k*r_s)) &
-!    !- sin(c*k*r_s)/((1.0d0+c)*k*r_s)+cos(k*r_s)*(Ci((1.0d0+c)*k*r_s)-Ci(k*r_s)))
-!    ukm = Ci(k*r_s)
-!end function ukm
-!real(dl) function Ci(x)
-!   real(dl), intent(in) :: x
-!   real(dl) :: rombint,maxa
-!   maxa = 30000.0
-!   Ci = rombint(Cii,log(x),log(maxa),tol)
-!end function Ci
-!real(dl) function Si(x)
-!   real(dl), intent(in) :: x
-!   real(dl) :: rombint,maxa
-!   maxa = 1e-10
-!   Si = rombint(Sii,log(maxa),log(x),tol)
-!end function Si
-!real(dl) function Cii(t)
-!   real(dl), intent(in) :: t
-!   Cii = -cos(exp(t))
-!end function Cii
-!real(dl) function Sii(t)
-!   real(dl), intent(in) :: t
-!   Sii = sin(exp(t))
-!end function Sii
+! The bias parameters.  Eq. 68 of astro-ph/0206508
+real(dl) function bias_1(m)
+real(dl), intent(in) :: m
+real(dl) :: q,p,ep1,E1
+q = 0.75d0
+p = 0.3
+ep1 = (q*nu(m) - 1.0)/(1.686470199841145d0/growth(hm%z))
+E1  = 2.0*p/(1.686470199841145d0/growth(hm%z))/(1.0+(q*nu(m))**p)
+bias_1 = 1.0+ep1+E1
+end function bias_1
+real(dl) function bias_2(m)
+real(dl), intent(in) :: m
+real(dl) :: q,p,ep1,E1,ep2,E2
+q = 0.75d0
+p = 0.3
+ep1 = (q*nu(m)-1.0)/(1.686470199841145d0/growth(hm%z))
+ep2 = (q*nu(m))*(q*nu(m)-3.0)/(1.686470199841145d0/growth(hm%z))**2
+E1  = 2.0*p/(1.686470199841145d0/growth(hm%z))/(1.0+(q*nu(m))**p)
+E2  = E1*(1.0+2.0*p)/(1.686470199841145d0/growth(hm%z))+2*ep1
+bias_2 = 2.0*(1.0+1.0)*(ep1+E1)+ep2+E2
+end function bias_2
+
 
 
 ! Calculate the Fourier transform of the dark matter distribution u(k|m)
 ! Equation 80 & 74 of astro-ph/0206508
 real(dl) function ukm(k,m)
     real(dl), intent(in) :: k
-    real(dl) :: x,delta_c,r_vir,p_s,c,m,gg,rombint,Ez2,omegam,omegal,z
+    real(dl) :: x,delta_c,r_vir,p_s,c,m,gg,rombint,Ez2,omegam,omegal
     omegam = hm%Params%omegab + hm%Params%omegac
     omegal = hm%Params%omegan
 
     ! Consentration parameter. Eq. 78 of astro-ph/0206508
-    c = 9.0/(1.0+z)*(m/1.259e13)**(-0.13d0)
+    c = 9.0/(1.0+hm%z)*(m/1.259e13)**(-0.13d0)
 
     ! \Delta_c & E(z)^2. Eq. 5-6 of arxiv:0907.4387
     x = omegam*(1.0+hm%z)**3/(omegam*(1.0+hm%z)**3+omegal)-1.0d0
     delta_c = 18.0*pi**2+82.0*x-39.0*x**2
-    Ez2 = omegam*(1.0+z)**3+omegal
+    Ez2 = omegam*(1.0+hm%z)**3+omegal
 
     ! Virial radius. Eq. 4 of arxiv:0907.4387
     r_vir = (3.0*m/(hm%rho_c*Ez2*4.0*pi*delta_c))**(1.0/3.0)
@@ -191,21 +177,21 @@ end function P1hi
 real(dl) function P2h(kg)
     real(dl), intent(in) :: kg
     real(dl) :: rombint
-    P2h = rombint(P2hi1,log(mmin),log(mmax),tol) + rombint(P2hi2,log(mmin),log(mmax),tol)
+    CALL qromb(P2h_int1,log(mmin),dlog(mmax),P2h,kg)
 end function P2h
-real(dl) function P2hi1(lnm)
-    real(dl), intent(in) :: lnm
-    real(dl) :: m,kk
+real(dl) function P2h_int1(lnm,kg)
+    real(dl), intent(in) :: lnm,kg
+    real(dl) :: m
     m = exp(lnm)
-    P2hi1 = nu_fnu(m)*ukm(kk,m)
-end function P2hi1
-real(dl) function P2hi2(lnm)
-    real(dl),intent(in) :: lnm
-    real(dl) :: Phh,m,kk
-    Phh = 1.0
+    CALL qromb(P2h_int2,log(mmin),dlog(mmax),P2h_int1,kg)
+    P2h_int1 = bias_1(m)*nu_fnu(m)*ukm(kg,m)*P2h_int1
+end function P2h_int1
+real(dl) function P2h_int2(lnm,kg)
+    real(dl),intent(in) :: lnm,kg
+    real(dl) :: m
     m = exp(lnm)
-    P2hi2 = nu_fnu(m)*ukm(kk,m)*Phh
-end function P2hi2
+    P2h_int2 = bias_2(m)*nu_fnu(m)*ukm(kg,m)*interpf(log(hm%k),dble(hm%Pk),log(kg))
+end function P2h_int2
 
 
 end module halo
