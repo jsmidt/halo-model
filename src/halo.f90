@@ -4,28 +4,22 @@ use CAMB
 use hm_init
 implicit none
 
-! Set types to be consistant with c double
-!integer,parameter :: idp = selected_int_kind(13)
-!integer,parameter :: dp = selected_real_kind(p=15,r=307)
 !
-real(dl), parameter:: kmin = 2.0e-4
-real(dl), parameter:: kmax = 2000.0d0
-real(dl), parameter:: mmin = 2e8
-real(dl), parameter:: mmax = 1e17
-real(dl), parameter:: dlnk = 0.105d0
-integer, parameter:: mpts = 160
-real(dl), parameter:: rho_bar = 1.0d0
-!real(dl) :: z,kk,crv
-!real(dl) :: omegab, omegac, omegal, omegan, H0, YHe, Num_Nu_massless, Num_Nu_massive, omegam,rho_c,r_s,kkkk
-!real(dl) :: rho_c
+real(dl), parameter:: kmin = 8.0e-5
+real(dl), parameter:: kmax = 4800.0d0
+real(dl), parameter:: mmin = 2e2
+real(dl), parameter:: mmax = 1e16
+real(dl), parameter:: dlnk = 0.090001d0
+integer, parameter:: mpts = 200
 
 contains
 
 subroutine init_halo()
-    real(dl) :: lnm,m
-    integer :: i,N
+    real(dl) :: lnm,m,lnk,k
+    integer :: i,j,N
     N = 190
     allocate(hm%m(N),hm%sig_2(N),hm%nu(N),hm%nu_fnu(N),hm%bias_1(N),hm%bias_2(N))
+    allocate(hm%lnk2d(mpts),hm%ukm(mpts,N),hm%lnm2d(N))
     lnm = 2
     open(unit=10,file='output/' // trim(hm%run_name) // '_nu_fnu.dat',form='formatted',status='unknown')
     do i = 1,N
@@ -36,10 +30,26 @@ subroutine init_halo()
         hm%nu_fnu(i) = nu_fnu(m)
         hm%bias_1(i) = bias_1(m)
         hm%bias_1(i) = bias_2(m)
-        write(10,'(6Es12.3)') hm%m(i), hm%sig_2(i),hm%nu(i), hm%nu_fnu(i), hm%bias_1(i), hm%bias_2(i)
+        write(10,'(6Es13.3)') hm%m(i), hm%sig_2(i),hm%nu(i), hm%nu_fnu(i), hm%bias_1(i), hm%bias_2(i)
         lnm = lnm+0.08
     end do
     close(10)
+
+
+!    do j = 1,mpts
+!        lnm = 2
+!        !write(*,*) j
+!        do i = 1,N
+!            m = 10**lnm
+!            hm%lnk2d(j) = log(kmin)+dlnk*(j-1)
+!            hm%lnm2d(i) = log(m)
+!            if (exp(log(kmin)+dlnk*(j-1)) .lt. 1129.0) then
+!            hm%ukm(j,i) = ukm(exp(hm%lnk2d(j)),exp(hm%lnm2d(i)))
+!            end if
+!            lnm = lnm+0.08
+!        end do
+!    end do
+
 
     ! Write out redshift and cosmology being used
     write(*,*) ' ' 
@@ -56,7 +66,6 @@ elemental real(dl) function win_top(x)
     real(dl),intent(in) :: x
     win_top = (3.0d0/x**3)*(sin(x)-x*cos(x))
 end function win_top
-
 
 ! Variance in the initial density fluctuation (\sigma^2(m))
 ! Equation 58 of astro-ph/0206508.
@@ -142,8 +151,8 @@ real(dl) function ukm(k,m)
     omegal = hm%Params%omegan
 
     ! Consentration parameter. Eq. 78 of astro-ph/0206508
-    !ms = interpf(log(hm%nu),hm%m,log(1.0d0))
-    ms = 2.0d13
+    ms = interpf(log(hm%nu),hm%m,log(1.0d0))
+    !ms = 2.0d13
     c = 9.0/(1.0+hm%z)*(m/ms)**(-0.13d0)
 
     ! \Delta_c & E(z)^2. Eq. 5-6 of arxiv:0907.4387
@@ -200,11 +209,13 @@ real(dl) function P1h(kg)
 end function P1h
 real(dl) function P1hi(lnm,k)
     real(dl),intent(in) :: lnm
-    real(dl) :: m,k,inu_fnu
+    real(dl) :: m,k,inu_fnu,omegam,omegal,omegamz
+    omegam = hm%Params%omegab + hm%Params%omegac
+    omegal = hm%Params%omegav
+    omegamz = omegam*(1.0+hm%z)**3/(omegam*(1.0+hm%z)**3+omegal)
     m = exp(lnm)
     inu_fnu = interpf(log(hm%m),hm%nu_fnu,lnm)
-    P1hi = m/hm%rho_c*inu_fnu*ukm(k,m)**2
-    !P1hi = m/hm%rho_c*nu_fnu(m)*ukm(k,m)**2
+    P1hi = m/hm%rho_c/omegamz*inu_fnu*ukm(k,m)**2
 end function P1hi
 
 ! Get 2-Halo Term

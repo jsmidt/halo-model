@@ -13,7 +13,7 @@ FFLAGS = -O2  -I../../camb
 F90FLAGS      = $(FFLAGS)
 FC            = $(F90C)
 CLSLIB  = -L../../camb -lcamb 
-OBJ       =  hm_init.o interp.o qromb.o halo.o main.o
+OBJ       =  hm_init.o interp.o bicubic.o qromb.o halo.o main.o
 
 default: halo
 all: halo

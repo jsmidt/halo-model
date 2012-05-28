@@ -13,6 +13,8 @@ type, extends(CAMBdata) :: HMdata
    real(dl) :: z
    real(dl), allocatable,dimension(:) :: k,m,nu_fnu,nu,sig_2,bias_1,bias_2
    real(sp), allocatable,dimension(:) :: Pk
+   real(dl), allocatable,dimension(:) :: lnk2d,lnm2d
+   real(dl), allocatable,dimension(:,:) :: ukm
    character*8 :: run_name 
 end type HMdata
 
@@ -30,7 +32,7 @@ subroutine init_params()
     hm%Params%WantTransfer= .true.
     hm%Params%WantCls= .false.
     hm%Params%Transfer%redshifts=hm%z
-    hm%Params%InitPower%ScalarPowerAmp(1) = 2.50e-9
+    hm%Params%InitPower%ScalarPowerAmp(1) = 1.50e-9
     hm%Params%omegab  = 0.045
     hm%Params%omegac  = 0.227
     hm%Params%omegav  = 0.728
@@ -38,6 +40,7 @@ subroutine init_params()
     hm%Params%H0      = 70.2
     hm%Params%YHe     = 0.24
     hm%Params%Num_Nu_massless = 3.04
+    !hm%Params%Num_Nu_massless = 0.0
     hm%Params%Num_Nu_massive  = 0
 
 
