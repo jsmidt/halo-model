@@ -1,32 +1,58 @@
 from pylab import *
 
 
-[a, b,c,d,e,f] = loadtxt('test_ukm.dat',unpack=True)
+[a, b,c,d,e] = loadtxt('test_ukm.dat',unpack=True)
 loglog(a,b,label='$10^{11} M_{\odot}$')
 loglog(a,c)
 loglog(a,d)
 loglog(a,e,label='$10^{16} M_{\odot}$')
-loglog(a,f)
 xlim(0.05,3e3)
 ylim(0.001,2.5)
 ylabel('u(k|m)',fontsize=16)
 xlabel('k  [h/Mpc]',fontsize=16)
+title('Compare with Fig. 9 of astro-ph/0206508')
 legend().draw_frame(0)
 show()
 
+
 [a, b,c,d] = loadtxt('test_powerspec.dat',unpack=True)
-loglog(a,b*a**3/2.0/pi**2)
-loglog(a,c*a**3/2.0/pi**2)
-loglog(a,(b+c)*a**3/2.0/pi**2)
+loglog(a,b*a**3/2.0/pi**2,label='linear')
+loglog(a,c*a**3/2.0/pi**2,label='1h')
+loglog(a,d*a**3/2.0/pi**2*0.3**2,label='2h')
+loglog(a,(b+c)*a**3/2.0/pi**2,label='total')
 ylim(0.1,1e4)
 xlim(0.05,1e3)
+ylabel('$\Delta^2(k)$',fontsize=16)
+xlabel('k  [h/Mpc]',fontsize=16)
+title('Compare with Fig. 11 of astro-ph/0206508')
+legend(loc='upper left').draw_frame(0)
 show()
 
-[a,b,c,d,e,f] = loadtxt('test_nu_fnu.dat',unpack=True)
+[a,b,c,d,e] = loadtxt('test_nu_fnu.dat',unpack=True)
 loglog(a,sqrt(b))
 ylim(0.5,50)
 xlim(100,1e15)
+ylabel('$\sigma(m)$',fontsize=16)
+xlabel('$M_{\odot}$',fontsize=16)
+title('Compare with Fig. 5 of astro-ph/0010468')
 show()
+
+[a,b,c,d,e] = loadtxt('test_nu_fnu.dat',unpack=True)
+loglog(c,d)
+ylim(0.001,0.5)
+xlim(0.1,30)
+ylabel(r'$\nu f(\nu)$',fontsize=16)
+xlabel(r'$\nu = (\delta_c/\sigma)^2$',fontsize=16)
+title('Compare with Fig. 2 of astro-ph/9901122')
+show()
+
+[a,b,c,d,e] = loadtxt('test_nu_fnu.dat',unpack=True)
+semilogx(a,e)
+xlim(1e11,1e14)
+ylim(0.5,2.5)
+show()
+
+
 
 
 exit()

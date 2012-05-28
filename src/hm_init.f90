@@ -30,24 +30,26 @@ subroutine init_params()
     hm%run_name = 'test'
     hm%z = 0.0
     hm%Params%WantTransfer= .true.
-    hm%Params%WantCls= .false.
-    hm%Params%Transfer%redshifts=hm%z
-    hm%Params%InitPower%ScalarPowerAmp(1) = 1.50e-9
-    hm%Params%omegab  = 0.045
-    hm%Params%omegac  = 0.227
-    hm%Params%omegav  = 0.728
-    hm%Params%omegan  = 0
-    hm%Params%H0      = 70.2
-    hm%Params%YHe     = 0.24
-    hm%Params%Num_Nu_massless = 3.04
-    !hm%Params%Num_Nu_massless = 0.0
-    hm%Params%Num_Nu_massive  = 0
+    hm%Params%WantCls= .false.              
+    hm%Params%Transfer%redshifts=hm%z       ! Redshift
+    hm%Params%InitPower%ScalarPowerAmp(1) = 2.45e-9 ! Scalar amplitude
+    hm%Params%omegab  = 0.0455              ! Baryon density
+    hm%Params%omegac  = 0.227               ! CDM density
+    hm%Params%omegav  = 0.728               ! Dark energy density  
+    hm%Params%omegan  = 0                   ! Neutrino density
+    hm%Params%H0      = 70.2                ! Hubble Constant
+    hm%Params%YHe     = 0.24                ! Helium fraction
+    hm%Params%Num_Nu_massless = 3.04        ! Massless neutrinos
+    hm%Params%Num_Nu_massive  = 0           ! # Massive neutrinos
+    hm%Params%InitPower%an(1)  = 0.961      ! Spectral Index
+    hm%Params%Transfer%kmax=0.9
 
 
     ! To get the critical density rho_c we need to calculate 3H^2/(8\piG).  
     ! We want units of M_\sun/Mpc^3. We know H0 has units of km/s/Mpc and 
     ! G = 4.302e-9 Mpc(km/s)^2/M_\sun So that 3H^2/(8\piG) has the right units.
-    hm%rho_c = 3.0d0*hm%Params%H0**2/8.0d0/pi/4.302e-9
+    hm%rho_c =3.0d0*hm%Params%H0**2/8.0d0/pi/4.302e-9/(hm%Params%H0/100.0)**2* &
+     ((hm%Params%omegab+hm%Params%omegac)*(1.0+hm%z)**3.0+hm%Params%omegav) 
 end subroutine init_params
 
 end module hm_init
