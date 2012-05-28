@@ -7,8 +7,8 @@ implicit none
 !
 real(dl), parameter:: kmin = 8.4e-5
 real(dl), parameter:: kmax = 1.0d5
-real(dl), parameter:: mmin = 2e2
-real(dl), parameter:: mmax = 2e16
+real(dl), parameter:: mmin = 1e9
+real(dl), parameter:: mmax = 1e16
 real(dl), parameter:: dlnk = 0.047d0
 integer, parameter:: mpts = 400
 
@@ -108,7 +108,8 @@ end function growth
 real(dl) function nu(m)
     real(dl), intent(in) :: m
     real(dl) :: z
-    nu = (1.686470199841145d0/growth(hm%z))**2/sig_2(m)
+    !nu = (1.686470199841145d0/growth(hm%z))**2/sig_2(m)
+    nu = (1.686470199841145d0)**2/sig_2(m)
 end function nu
 
 ! Calculate f_nu for mass m and redshift z. Equation 59 of astro-ph/0206508.
@@ -124,11 +125,13 @@ end function nu_fnu
 ! The bias parameters.  Eq. 68 of astro-ph/0206508
 real(dl) function bias_1(m)
 real(dl), intent(in) :: m
-real(dl) :: q,p,ep1,E1
+real(dl) :: q,p,ep1,E1,delc
 q = 0.75d0
 p = 0.3
-ep1 = (q*nu(m) - 1.0)/(1.686470199841145d0/growth(hm%z))
-E1  = 2.0*p/(1.686470199841145d0/growth(hm%z))/(1.0+(q*nu(m))**p)
+!delc = (1.686470199841145d0/growth(hm%z))
+delc = (1.686470199841145d0)
+ep1 = (q*nu(m) - 1.0)/delc
+E1  = 2.0*p/delc/(1.0+(q*nu(m))**p)
 bias_1 = 1.0+ep1+E1
 end function bias_1
 real(dl) function bias_2(m)
@@ -225,29 +228,17 @@ end function P1hi
 real(dl) function P2h(kg)
     real(dl), intent(in) :: kg
     real(dl) :: rombint
-    CALL qromb(P2h_int1,log(mmin),dlog(mmax),P2h,kg)
-    !P2h = interpf(log(hm%k),dble(hm%Pk),log(kg))
+    CALL qromb(P2hi,log(mmin),dlog(mmax),P2h,kg)
     P2h = P2h**2*interpf(log(hm%k),dble(hm%Pk),log(kg))
-    !P2h = P2h**2
 end function P2h
-real(dl) function P2h_int1(lnm,kg)
-    real(dl), intent(in) :: lnm,kg
+real(dl) function P2hi(lnm,k)
+    real(dl), intent(in) :: lnm,k
     real(dl) :: m,inu_fnu,ibias_1
     m = exp(lnm)
     inu_fnu = interpf(log(hm%m),hm%nu_fnu,lnm)
-    ibias_1 = interpf(log(hm%m),hm%bias_1,lnm)
-    !CALL qromb(P2h_int2,log(mmin),dlog(mmax),P2h_int1,kg)
-    !P2h_int1 = ibias_1*inu_fnu*ukm(kg,m)*P2h_int1
-    P2h_int1 = ibias_1*inu_fnu*ukm(kg,m)
-end function P2h_int1
-!real(dl) function P2h_int2(lnm,kg)
-!    real(dl),intent(in) :: lnm,kg
-!    real(dl) :: m,inu_fnu,ibias_1
-!    m = exp(lnm)
-!    inu_fnu = interpf(log(hm%m),hm%nu_fnu,lnm)
-!    ibias_1 = interpf(log(hm%m),hm%bias_1,lnm)
-!    P2h_int2 = ibias_1*inu_fnu*ukm(kg,m)
-!end function P2h_int2
+    !ibias_1 = interpf(log(hm%m),hm%bias_1,lnm)
+    P2hi = ibias_1*inu_fnu*ukm(k,m)
+end function P2hi
 
 
 end module halo

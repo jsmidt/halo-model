@@ -1,7 +1,6 @@
 program test
 use halo
 use interp
-use bicubic
 implicit none
 
 real(dl) :: m,rombint,kg,mm,mmm,kk,mmmm,zi
@@ -14,10 +13,11 @@ allocate(hm%k(mpts),hm%Pk(mpts))
 allocate(xx(10),yy(10))
 call init_params()
 call linear_pk(hm%k,hm%Pk)
-!write(*,*) hm%k(400), hm%Pk(400)
+!write(*,*) hm%m(200), hm%sig_2(200)
 !write(*,*) sig_2(1.0d2)
 !write(*,*) sqrt(sig_2(1.717d14))
-!stop
+write(*,*) sqrt(sig_2(8.0d0))
+!    stop
 call init_halo()
 
 
@@ -38,7 +38,7 @@ end do
 
 kk  = -4
 open(unit=10,file='output/' // trim(hm%run_name) // '_powerspec.dat',form='formatted',status='unknown')
-do i=1,48
+do i=1,47
     kg = 10**kk
     write(*,*) kg
     write(10,'(4Es12.3)') kg,interpf(hm%k,dble(hm%Pk),kg),P1h(kg),P2h(kg)

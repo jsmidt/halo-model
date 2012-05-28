@@ -42,7 +42,6 @@ subroutine init_params()
     hm%Params%Num_Nu_massless = 3.04        ! Massless neutrinos
     hm%Params%Num_Nu_massive  = 0           ! # Massive neutrinos
     hm%Params%InitPower%an(1)  = 0.961      ! Spectral Index
-    hm%Params%Transfer%kmax=0.9
 
 
     ! To get the critical density rho_c we need to calculate 3H^2/(8\piG).  
