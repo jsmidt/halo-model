@@ -11,7 +11,7 @@ type, extends(CAMBdata) :: HMdata
    real(dl) :: rho_c
    real(dl) :: r_s
    real(dl) :: z
-   real(dl), allocatable,dimension(:) :: k,m,nu_fnu,nu,sig_2,bias_1,bias_2
+   real(dl), allocatable,dimension(:) :: k,m,nu_m,sig_2,bias_1,bias_2,nu_fnum
    real(sp), allocatable,dimension(:) :: Pk
    real(dl), allocatable,dimension(:) :: lnk2d,lnm2d
    real(dl), allocatable,dimension(:,:) :: ukm

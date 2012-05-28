@@ -7,8 +7,8 @@ implicit none
 !
 real(dl), parameter:: kmin = 8.4e-5
 real(dl), parameter:: kmax = 1.0d5
-real(dl), parameter:: mmin = 1e9
-real(dl), parameter:: mmax = 1e16
+real(dl), parameter:: mmin = 2e2
+real(dl), parameter:: mmax = 2e16
 real(dl), parameter:: dlnk = 0.047d0
 integer, parameter:: mpts = 400
 
@@ -17,40 +17,22 @@ contains
 subroutine init_halo()
     real(dl) :: lnm,m,lnk,k
     integer :: i,j,N
-    N = 190
-    allocate(hm%m(N),hm%sig_2(N),hm%nu(N),hm%nu_fnu(N),hm%bias_1(N),hm%bias_2(N))
+    N = 195
+    allocate(hm%m(N),hm%sig_2(N),hm%nu_m(N),hm%nu_fnum(N),hm%bias_1(N),hm%bias_2(N))
     allocate(hm%lnk2d(mpts),hm%ukm(mpts,N),hm%lnm2d(N))
-    lnm = 2
+    lnm = 1.69897
     open(unit=10,file='output/' // trim(hm%run_name) // '_nu_fnu.dat',form='formatted',status='unknown')
     do i = 1,N
         m = 10**lnm
         hm%m(i) = m
         hm%sig_2(i) = sig_2(m)
-        hm%nu(i) = nu(m)
-        hm%nu_fnu(i) = nu_fnu(m)
-        hm%bias_1(i) = bias_1(m)
-        !hm%bias_2(i) = bias_2(m)
-        !write(10,'(6Es13.3)') hm%m(i), hm%sig_2(i),hm%nu(i), hm%nu_fnu(i)
-        write(10,'(6Es13.3)') hm%m(i), hm%sig_2(i),hm%nu(i), hm%nu_fnu(i), hm%bias_1(i)!, hm%bias_2(i)
+        hm%nu_m(i) = nu_m(m)
+        hm%nu_fnum(i) = nu_fnu(hm%nu_m(i))
+        hm%bias_1(i) = bias_1(hm%nu_m(i))
+        write(10,'(6Es13.3)') hm%m(i), hm%sig_2(i),hm%nu_m(i), hm%nu_fnum(i), hm%bias_1(i)
         lnm = lnm+0.08
     end do
     close(10)
-
-
-!    do j = 1,mpts
-!        lnm = 2
-!        !write(*,*) j
-!        do i = 1,N
-!            m = 10**lnm
-!            hm%lnk2d(j) = log(kmin)+dlnk*(j-1)
-!            hm%lnm2d(i) = log(m)
-!            if (exp(log(kmin)+dlnk*(j-1)) .lt. 1129.0) then
-!            hm%ukm(j,i) = ukm(exp(hm%lnk2d(j)),exp(hm%lnm2d(i)))
-!            end if
-!            lnm = lnm+0.08
-!        end do
-!    end do
-
 
     ! Write out redshift and cosmology being used
     write(*,*) ' ' 
@@ -65,7 +47,6 @@ end subroutine init_halo
 ! Tophat window function. See eq. 58 of astro-ph/0206508.
 elemental real(dl) function win_top(x)
     real(dl),intent(in) :: x
-    !win_top = (3.0d0/x**3)*(sin(x)-x*cos(x))
     win_top = (3.0d0/x**3)*(sin(x)-x*cos(x))
 end function win_top
 
@@ -105,46 +86,70 @@ elemental real(dl) function growth(zz)
 end function growth
 
 ! Calculate nu for mass m and redshift z.  Equation 57 of astro-ph/0206508.
-real(dl) function nu(m)
+real(dl) function nu_m(m)
     real(dl), intent(in) :: m
     real(dl) :: z
     !nu = (1.686470199841145d0/growth(hm%z))**2/sig_2(m)
-    nu = (1.686470199841145d0)**2/sig_2(m)
-end function nu
+    nu_m = (1.686470199841145d0)**2/sig_2(m)
+end function nu_m
 
 ! Calculate f_nu for mass m and redshift z. Equation 59 of astro-ph/0206508.
-real(dl) function nu_fnu(m)
-    real(dl), intent(in) :: m
-    real(dl):: A,q,p
-    A = 0.3222d0
+real(dl) function nu_fnu(nu)
+    real(dl), intent(in) :: nu
+    real(dl):: A,q,p,nup
+    !A = 0.3222d0
+    A = 0.413078984
+    !A =  0.125859375
     q = 0.75d0
     p = 0.3d0
-    nu_fnu=A*(1.0d0+(q*nu(m))**(-p))*(q*nu(m)/2.0d0/pi)**0.5*exp(-q*nu(m)/2.0d0)
+    nup = q*nu
+    nu_fnu=A*(1.0d0+nup**(-p))*(nup/2.0d0/pi)**0.5*exp(-nup/2.0d0)
 end function nu_fnu
 
+
+! Calculate f_nu for mass m and redshift z. Equation 59 of astro-ph/0206508.
+real(dl) function nfnu(m)
+    real(dl), intent(in) :: m
+    real(dl) :: rombint
+    nfnu = rombint(nfnui,log(4.434d-019),log(2.386d06),tol)
+end function nfnu
+
+
+! Calculate f_nu for mass m and redshift z. Equation 59 of astro-ph/0206508.
+real(dl) function nfnui(lnm)
+    real(dl), intent(in) :: lnm
+    real(dl):: q,p,num
+    q = 0.75d0
+    p = 0.3d0
+    num = exp(lnm)
+    nfnui=(1.0d0+(q*num)**(-p))*(q*num/2.0d0/pi)**0.5*exp(-q*num/2.0d0)
+end function nfnui
+
+
 ! The bias parameters.  Eq. 68 of astro-ph/0206508
-real(dl) function bias_1(m)
-real(dl), intent(in) :: m
-real(dl) :: q,p,ep1,E1,delc
+real(dl) function bias_1(nu)
+real(dl), intent(in) :: nu
+real(dl) :: q,p,ep1,E1,delc,nup
 q = 0.75d0
 p = 0.3
+nup = nu*q
 !delc = (1.686470199841145d0/growth(hm%z))
 delc = (1.686470199841145d0)
-ep1 = (q*nu(m) - 1.0)/delc
-E1  = 2.0*p/delc/(1.0+(q*nu(m))**p)
+ep1 = (nup-1.0)/delc
+E1  = 2.0*p/delc/(1.0+nup**p)
 bias_1 = 1.0+ep1+E1
 end function bias_1
-real(dl) function bias_2(m)
-real(dl), intent(in) :: m
-real(dl) :: q,p,ep1,E1,ep2,E2
-q = 0.75d0
-p = 0.3
-ep1 = (q*nu(m)-1.0)/(1.686470199841145d0/growth(hm%z))
-ep2 = (q*nu(m))*(q*nu(m)-3.0)/(1.686470199841145d0/growth(hm%z))**2
-E1  = 2.0*p/(1.686470199841145d0/growth(hm%z))/(1.0+(q*nu(m))**p)
-E2  = E1*((1.0+2.0*p)/(1.686470199841145d0/growth(hm%z))+2*ep1)
-bias_2 = 2.0*(1.0-17.0/21.0)*(ep1+E1)+ep2+E2
-end function bias_2
+!real(dl) function bias_2(m)
+!real(dl), intent(in) :: m
+!real(dl) :: q,p,ep1,E1,ep2,E2
+!q = 0.75d0
+!p = 0.3
+!ep1 = (q*nu(m)-1.0)/(1.686470199841145d0/growth(hm%z))
+!ep2 = (q*nu(m))*(q*nu(m)-3.0)/(1.686470199841145d0/growth(hm%z))**2
+!E1  = 2.0*p/(1.686470199841145d0/growth(hm%z))/(1.0+(q*nu(m))**p)
+!E2  = E1*((1.0+2.0*p)/(1.686470199841145d0/growth(hm%z))+2*ep1)
+!bias_2 = 2.0*(1.0-17.0/21.0)*(ep1+E1)+ep2+E2
+!end function bias_2
 
 
 
@@ -157,7 +162,7 @@ real(dl) function ukm(k,m)
     omegal = hm%Params%omegan
 
     ! Consentration parameter. Eq. 78 of astro-ph/0206508
-    ms = interpf(log(hm%nu),hm%m,log(1.0d0))
+    ms = interpf(log(hm%nu_m),hm%m,log(1.0d0))
     !ms = 2.0d13
     c = 9.0/(1.0+hm%z)*(m/ms)**(-0.13d0)
 
@@ -211,16 +216,17 @@ real(dl) function P1h(kg)
     real(dl), intent(in) :: kg
     real(dl) :: rombint,tol2
     !P1h = rombint(P1hi,log(mmin),log(mmax),tol)
-    CALL qromb(P1hi,log(mmin),dlog(mmax),P1h,kg)
+    CALL qromb(P1hi,log(4.117d-03),dlog(2.864d02),P1h,kg)
 end function P1h
-real(dl) function P1hi(lnm,k)
-    real(dl),intent(in) :: lnm
-    real(dl) :: m,k,inu_fnu,omegam,omegal,omegamz
+real(dl) function P1hi(lnnu,k)
+    real(dl),intent(in) :: lnnu
+    real(dl) :: m,k,inu_fnu,omegam,omegal,omegamz,nu
     omegam = hm%Params%omegab + hm%Params%omegac
     omegal = hm%Params%omegav
     omegamz = omegam*(1.0+hm%z)**3/(omegam*(1.0+hm%z)**3+omegal)
-    m = exp(lnm)
-    inu_fnu = interpf(log(hm%m),hm%nu_fnu,lnm)
+    nu = exp(lnnu)
+    m = interpf(log(hm%nu_m),hm%m,lnnu)
+    inu_fnu = interpf(log(hm%nu_m),hm%nu_fnum,lnnu)
     P1hi = m/hm%rho_c/omegamz*inu_fnu*ukm(k,m)**2
 end function P1hi
 
@@ -228,15 +234,16 @@ end function P1hi
 real(dl) function P2h(kg)
     real(dl), intent(in) :: kg
     real(dl) :: rombint
-    CALL qromb(P2hi,log(mmin),dlog(mmax),P2h,kg)
+    CALL qromb(P2hi,log(4.117d-03),dlog(2.864d02),P2h,kg)
     P2h = P2h**2*interpf(log(hm%k),dble(hm%Pk),log(kg))
 end function P2h
-real(dl) function P2hi(lnm,k)
-    real(dl), intent(in) :: lnm,k
-    real(dl) :: m,inu_fnu,ibias_1
-    m = exp(lnm)
-    inu_fnu = interpf(log(hm%m),hm%nu_fnu,lnm)
-    !ibias_1 = interpf(log(hm%m),hm%bias_1,lnm)
+real(dl) function P2hi(lnnu,k)
+    real(dl), intent(in) :: lnnu,k
+    real(dl) :: m,inu_fnu,ibias_1,nu
+    nu = exp(lnnu)
+    m = interpf(log(hm%nu_m),hm%m,lnnu)
+    inu_fnu = interpf(log(hm%nu_m),hm%nu_fnum,lnnu)
+    ibias_1 = interpf(log(hm%nu_m),hm%bias_1,lnnu)
     P2hi = ibias_1*inu_fnu*ukm(k,m)
 end function P2hi
 
