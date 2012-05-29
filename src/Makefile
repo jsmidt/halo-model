@@ -4,7 +4,7 @@
 
 # Intel compiler
 F90C = ifort
-FFLAGS = -openmp -O2 -ip -W0 -WB -fpp2 -vec_report0 -I../camb
+FFLAGS = -openmp -O2 -ip -W0 -WB -fpp2 -vec_report0 -I../../camb
 
 #Gfortran compiler: if pre v4.3 add -D__GFORTRAN__
 F90C = gfortran
