@@ -38,7 +38,7 @@ end do
 
 kk  = -4
 open(unit=10,file='output/' // trim(hm%run_name) // '_powerspec.dat',form='formatted',status='unknown')
-do i=1,47
+do i=1,48
     kg = 10**kk
     write(*,*) kg
     write(10,'(4Es12.3)') kg,interpf(hm%k,dble(hm%Pk),kg),P1h(kg),P2h(kg)

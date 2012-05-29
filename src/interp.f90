@@ -68,7 +68,7 @@ end function interpf
      enddo
 
      return
-     END
+     END SUBROUTINE spline
 
    SUBROUTINE splint(xa, ya, y2a, n, x, y)
 !   USE nrtype
@@ -105,6 +105,6 @@ end function interpf
      y=a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))*(h**2)/6.
 
      return
-     END
+     END SUBROUTINE splint
 
 end module interp

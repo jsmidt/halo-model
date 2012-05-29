@@ -99,7 +99,6 @@ real(dl) function nu_fnu(nu)
     real(dl):: A,q,p,nup
     !A = 0.3222d0
     A = 0.413078984
-    !A =  0.125859375
     q = 0.75d0
     p = 0.3d0
     nup = q*nu
@@ -162,8 +161,8 @@ real(dl) function ukm(k,m)
     omegal = hm%Params%omegan
 
     ! Consentration parameter. Eq. 78 of astro-ph/0206508
-    ms = interpf(log(hm%nu_m),hm%m,log(1.0d0))
-    !ms = 2.0d13
+    !ms = interpf(log(hm%nu_m),hm%m,log(1.0d0))
+    ms = 3.6d12
     c = 9.0/(1.0+hm%z)*(m/ms)**(-0.13d0)
 
     ! \Delta_c & E(z)^2. Eq. 5-6 of arxiv:0907.4387
