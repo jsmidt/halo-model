@@ -20,7 +20,6 @@ subroutine init_halo()
     N = 195
     allocate(hm%m(N),hm%sig_2(N),hm%nu_m(N),hm%nu_fnum(N),hm%bias_1(N),hm%bias_2(N))
     allocate(hm%sp_nu_fnum(N),hm%sp_bias_1(N))
-    allocate(hm%lnk2d(mpts),hm%ukm(mpts,N),hm%lnm2d(N))
     lnm = 1.69897
     open(unit=10,file='output/' // trim(hm%run_name) // '_nu_fnu.dat',form='formatted',status='unknown')
     do i = 1,N
@@ -35,10 +34,17 @@ subroutine init_halo()
     end do
     close(10)
 
-    write(*,*) shape(hm%sp_nu_fnum)
+    do j=1,size(hm%k)
+        do i=1,size(hm%nu_m)
+            hm%ukm(j,i) = ukm(hm%k(j),hm%m(i))
+        enddo
+    enddo
+    hm%sp_ukm = 0
+
 
     call spline(dlog(hm%nu_m),hm%nu_fnum,size(hm%nu_m),1d40,1d40,hm%sp_nu_fnum)
     call spline(dlog(hm%nu_m),hm%bias_1,size(hm%nu_m),1d40,1d40,hm%sp_bias_1)
+    call splie2(dlog(hm%k), dlog(hm%m),hm%ukm, mpts,N, hm%sp_ukm)
 
     ! Write out redshift and cosmology being used
     write(*,*) ' ' 
@@ -167,8 +173,8 @@ real(dl) function ukm(k,m)
     omegal = hm%Params%omegan
 
     ! Consentration parameter. Eq. 78 of astro-ph/0206508
-    ms = interpf(log(hm%nu_m),hm%m,log(1.0d0))
-    !ms = 3.6d12
+    !ms = interpf(log(hm%nu_m),hm%m,log(1.0d0))
+    ms = 3.6d12
     c = 9.0/(1.0+hm%z)*(m/ms)**(-0.13d0)
 
     ! \Delta_c & E(z)^2. Eq. 5-6 of arxiv:0907.4387
@@ -220,19 +226,19 @@ end subroutine linear_pk
 real(dl) function P1h(kg)
     real(dl), intent(in) :: kg
     real(dl) :: rombint,tol2
-    !P1h = rombint(P1hi,log(mmin),log(mmax),tol)
     CALL qromb(P1hi,dlog(minval(hm%nu_m)),dlog(maxval(hm%nu_m)),P1h,kg)
 end function P1h
 real(dl) function P1hi(lnnu,k)
     real(dl),intent(in) :: lnnu
-    real(dl) :: m,k,inu_fnu,omegam,omegal,omegamz,nu
+    real(dl) :: m,k,inu_fnu,omegam,omegal,omegamz,nu,iukm
     omegam = hm%Params%omegab + hm%Params%omegac
     omegal = hm%Params%omegav
     omegamz = omegam*(1.0+hm%z)**3/(omegam*(1.0+hm%z)**3+omegal)
     nu = exp(lnnu)
     m = interpf(dlog(hm%nu_m),hm%m,lnnu)
   call splint(dlog(hm%nu_m),hm%nu_fnum,hm%sp_nu_fnum,size(hm%nu_m),lnnu,inu_fnu)
-    P1hi = m/hm%rho_c/omegamz*inu_fnu*ukm(k,m)**2
+call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,mpts,195,dlog(k),dlog(m),iukm)
+    P1hi = m/hm%rho_c/omegamz*inu_fnu*iukm**2
 end function P1hi
 
 ! Get 2-Halo Term
@@ -244,12 +250,13 @@ real(dl) function P2h(kg)
 end function P2h
 real(dl) function P2hi(lnnu,k)
     real(dl), intent(in) :: lnnu,k
-    real(dl) :: m,inu_fnu,ibias_1,nu
+    real(dl) :: m,inu_fnu,ibias_1,nu,iukm
     nu = exp(lnnu)
     m = interpf(dlog(hm%nu_m),hm%m,lnnu)
   call splint(dlog(hm%nu_m),hm%nu_fnum,hm%sp_nu_fnum,size(hm%nu_m),lnnu,inu_fnu)
   call splint(dlog(hm%nu_m),hm%bias_1,hm%sp_bias_1,size(hm%nu_m),lnnu,ibias_1)
-    P2hi = ibias_1*inu_fnu*ukm(k,m)
+call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,mpts,195,dlog(k),dlog(m),iukm)
+    P2hi = ibias_1*inu_fnu*iukm
 end function P2hi
 
 

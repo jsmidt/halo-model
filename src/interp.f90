@@ -107,4 +107,40 @@ end function interpf
      return
      END SUBROUTINE splint
 
+    SUBROUTINE splie2(x1a,x2a,ya,m,n,y2a)
+    INTEGER m,n,NN
+    REAL(dl) x1a(m),x2a(n),y2a(m,n),ya(m,n)
+    PARAMETER (NN=200)
+    !USES spline
+    INTEGER j,k
+    REAL(dl) y2tmp(NN),ytmp(NN)
+    do j=1,m
+     do k=1,n
+        ytmp(k)=ya(j,k)
+     end do
+      call spline(x2a,ytmp,n,1.d30,1.d30,y2tmp)
+     do k=1,n
+        y2a(j,k)=y2tmp(k)
+     end do
+     end do
+     END SUBROUTINE splie2
+
+     SUBROUTINE splin2(x1a,x2a,ya,y2a,m,n,x1,x2,y)
+    INTEGER m,n,NN
+    REAL(dl) x1,x2,y,x1a(m),x2a(n),y2a(m,n),ya(m,n)
+    PARAMETER (NN=200)
+    !USES spline,splint
+    INTEGER j,k
+    REAL(dl) y2tmp(NN),ytmp(NN),yytmp(NN)
+    do j=1,m
+     do k=1,n
+        ytmp(k)=ya(j,k)
+       y2tmp(k)=y2a(j,k)
+     end do
+      call splint(x2a,ytmp,y2tmp,n,x2,yytmp(j))
+    end do
+    call spline(x1a,yytmp,m,1.d30,1.d30,y2tmp)
+    call splint(x1a,yytmp,y2tmp,m,x1,y)
+    END SUBROUTINE splin2
+
 end module interp

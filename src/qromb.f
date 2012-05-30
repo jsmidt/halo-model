@@ -2,7 +2,7 @@
       INTEGER JMAX,JMAXP,K,KM
       REAL*8 a,b,func,ss,q,EPS
       EXTERNAL func
-      PARAMETER (EPS=1.d-6, JMAX=20, JMAXP=JMAX+1, K=5, KM=K-1)
+      PARAMETER (EPS=4.d-6, JMAX=20, JMAXP=JMAX+1, K=5, KM=K-1)
 CU    USES polint,trapzd
       INTEGER j
       REAL*8 dss,h(JMAXP),s(JMAXP)

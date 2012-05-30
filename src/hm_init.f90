@@ -15,7 +15,7 @@ type, extends(CAMBdata) :: HMdata
    real(dl), allocatable,dimension(:) :: sp_bias_1,sp_nu_fnum
    real(sp), allocatable,dimension(:) :: Pk
    real(dl), allocatable,dimension(:) :: lnk2d,lnm2d
-   real(dl), allocatable,dimension(:,:) :: ukm
+   real(dl), dimension(200,195) :: ukm,sp_ukm
    character*8 :: run_name 
 end type HMdata
 
