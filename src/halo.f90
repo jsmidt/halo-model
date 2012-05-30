@@ -19,6 +19,7 @@ subroutine init_halo()
     integer :: i,j,N
     N = 195
     allocate(hm%m(N),hm%sig_2(N),hm%nu_m(N),hm%nu_fnum(N),hm%bias_1(N),hm%bias_2(N))
+    allocate(hm%sp_nu_fnum(N),hm%sp_bias_1(N))
     allocate(hm%lnk2d(mpts),hm%ukm(mpts,N),hm%lnm2d(N))
     lnm = 1.69897
     open(unit=10,file='output/' // trim(hm%run_name) // '_nu_fnu.dat',form='formatted',status='unknown')
@@ -30,9 +31,14 @@ subroutine init_halo()
         hm%nu_fnum(i) = nu_fnu(hm%nu_m(i))
         hm%bias_1(i) = bias_1(hm%nu_m(i))
         write(10,'(6Es13.3)') hm%m(i), hm%sig_2(i),hm%nu_m(i), hm%nu_fnum(i), hm%bias_1(i)
-        lnm = lnm+0.08
+        lnm = lnm+0.074
     end do
     close(10)
+
+    write(*,*) shape(hm%sp_nu_fnum)
+
+    call spline(dlog(hm%nu_m),hm%nu_fnum,size(hm%nu_m),1d40,1d40,hm%sp_nu_fnum)
+    call spline(dlog(hm%nu_m),hm%bias_1,size(hm%nu_m),1d40,1d40,hm%sp_bias_1)
 
     ! Write out redshift and cosmology being used
     write(*,*) ' ' 
@@ -59,13 +65,13 @@ real(dl) function sig_2(m)
     omegal = hm%Params%omegav
     omegamz = omegam*(1.0+hm%z)**3/(omegam*(1.0+hm%z)**3+omegal)
     R = (3.0d0*m/(4.0d0*pi*hm%rho_c*omegamz))**(1.0d0/3.0d0)
-    CALL qromb(sig_2int,log(kmin),dlog(kmax),sig_2,R)
+    CALL qromb(sig_2int,dlog(kmin),dlog(kmax),sig_2,R)
 end function sig_2
 real(dl) function sig_2int(lnk,R)
     real(dl),intent(in) :: lnk,R
     real(dl) :: k,P_lin
     k = exp(lnk)
-    P_lin = interpf(log(hm%k),dble(hm%Pk),lnk)
+    P_lin = interpf(dlog(hm%k),dble(hm%Pk),lnk)
     sig_2int = (k**3/2.0d0/pi**2)*P_lin*win_top(k*R)**2
 end function sig_2int
 
@@ -110,7 +116,7 @@ end function nu_fnu
 real(dl) function nfnu(m)
     real(dl), intent(in) :: m
     real(dl) :: rombint
-    nfnu = rombint(nfnui,log(4.434d-019),log(2.386d06),tol)
+    nfnu = rombint(nfnui,dlog(4.434d-019),dlog(2.386d06),tol)
 end function nfnu
 
 
@@ -161,8 +167,8 @@ real(dl) function ukm(k,m)
     omegal = hm%Params%omegan
 
     ! Consentration parameter. Eq. 78 of astro-ph/0206508
-    !ms = interpf(log(hm%nu_m),hm%m,log(1.0d0))
-    ms = 3.6d12
+    ms = interpf(log(hm%nu_m),hm%m,log(1.0d0))
+    !ms = 3.6d12
     c = 9.0/(1.0+hm%z)*(m/ms)**(-0.13d0)
 
     ! \Delta_c & E(z)^2. Eq. 5-6 of arxiv:0907.4387
@@ -177,10 +183,10 @@ real(dl) function ukm(k,m)
     hm%r_s = r_vir/c
 
     ! p_s  Eq. 3 of arxiv:0907.4387
-    p_s = c**3*m/(4.0*pi*r_vir**3)/(log(1.0+c)-c/(1.0+c))
+    p_s = c**3*m/(4.0*pi*r_vir**3)/(dlog(1.0+c)-c/(1.0+c))
 
     gg = 1.0e-4
-    CALL qromb(ukmi,log(gg),log(r_vir),ukm,k)
+    CALL qromb(ukmi,dlog(gg),dlog(r_vir),ukm,k)
     ukm = p_s*ukm/m
 end function ukm
 real(dl) function ukmi(lnr,k)
@@ -201,7 +207,7 @@ subroutine linear_pk(k,Pk)
 
    ! Get k.
    do i=1,mpts
-     k(i)=exp(log(kmin)+dlnk*(i-1))
+     k(i)=exp(dlog(kmin)+dlnk*(i-1))
    end do
 
    ! Get P(k)
@@ -215,7 +221,7 @@ real(dl) function P1h(kg)
     real(dl), intent(in) :: kg
     real(dl) :: rombint,tol2
     !P1h = rombint(P1hi,log(mmin),log(mmax),tol)
-    CALL qromb(P1hi,log(4.357d-03),dlog(2.864d02),P1h,kg)
+    CALL qromb(P1hi,dlog(minval(hm%nu_m)),dlog(maxval(hm%nu_m)),P1h,kg)
 end function P1h
 real(dl) function P1hi(lnnu,k)
     real(dl),intent(in) :: lnnu
@@ -224,8 +230,8 @@ real(dl) function P1hi(lnnu,k)
     omegal = hm%Params%omegav
     omegamz = omegam*(1.0+hm%z)**3/(omegam*(1.0+hm%z)**3+omegal)
     nu = exp(lnnu)
-    m = interpf(log(hm%nu_m),hm%m,lnnu)
-    inu_fnu = interpf(log(hm%nu_m),hm%nu_fnum,lnnu)
+    m = interpf(dlog(hm%nu_m),hm%m,lnnu)
+  call splint(dlog(hm%nu_m),hm%nu_fnum,hm%sp_nu_fnum,size(hm%nu_m),lnnu,inu_fnu)
     P1hi = m/hm%rho_c/omegamz*inu_fnu*ukm(k,m)**2
 end function P1hi
 
@@ -233,16 +239,16 @@ end function P1hi
 real(dl) function P2h(kg)
     real(dl), intent(in) :: kg
     real(dl) :: rombint
-    CALL qromb(P2hi,log(4.357d-03),dlog(2.864d02),P2h,kg)
-    P2h = P2h**2*interpf(log(hm%k),dble(hm%Pk),log(kg))
+    CALL qromb(P2hi,log(minval(hm%nu_m)),dlog(maxval(hm%nu_m)),P2h,kg)
+    P2h = P2h**2*interpf(dlog(hm%k),dble(hm%Pk),log(kg))
 end function P2h
 real(dl) function P2hi(lnnu,k)
     real(dl), intent(in) :: lnnu,k
     real(dl) :: m,inu_fnu,ibias_1,nu
     nu = exp(lnnu)
-    m = interpf(log(hm%nu_m),hm%m,lnnu)
-    inu_fnu = interpf(log(hm%nu_m),hm%nu_fnum,lnnu)
-    ibias_1 = interpf(log(hm%nu_m),hm%bias_1,lnnu)
+    m = interpf(dlog(hm%nu_m),hm%m,lnnu)
+  call splint(dlog(hm%nu_m),hm%nu_fnum,hm%sp_nu_fnum,size(hm%nu_m),lnnu,inu_fnu)
+  call splint(dlog(hm%nu_m),hm%bias_1,hm%sp_bias_1,size(hm%nu_m),lnnu,ibias_1)
     P2hi = ibias_1*inu_fnu*ukm(k,m)
 end function P2hi
 
