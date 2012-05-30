@@ -13,6 +13,8 @@ allocate(hm%k(mpts),hm%Pk(mpts))
 allocate(xx(10),yy(10))
 call init_params()
 call linear_pk(hm%k,hm%Pk)
+write(*,*) hm%k(200)
+!stop
 !write(*,*) hm%m(200), hm%sig_2(200)
 write(*,*) nu_m(5.0d1)
 !write(*,*) sqrt(sig_2(1.717d14))
@@ -30,8 +32,9 @@ mm = 4.64e12
 mmm = 2.15e14
 mmmm = 1e16
 open(unit=10,file='output/' // trim(hm%run_name) // '_ukm.dat',form='formatted',status='unknown')
-do i=1,52
+do i=1,48
     kg = 10**kk
+    write(*,*) kg
     write(10,'(6Es12.3)') kg,ukm(kg,m),ukm(kg,mm),ukm(kg,mmm),ukm(kg,mmmm)
     kk = kk+0.15
 end do

@@ -6,11 +6,11 @@ implicit none
 
 !
 real(dl), parameter:: kmin = 8.4e-5
-real(dl), parameter:: kmax = 1.0d5
-real(dl), parameter:: mmin = 2e2
-real(dl), parameter:: mmax = 2e16
-real(dl), parameter:: dlnk = 0.047d0
-integer, parameter:: mpts = 400
+real(dl), parameter:: kmax = 3.0d3
+real(dl), parameter:: mmin = 2e1
+real(dl), parameter:: mmax = 1e16
+real(dl), parameter:: dlnk = 0.087d0
+integer, parameter:: mpts = 200
 
 contains
 
@@ -215,7 +215,7 @@ real(dl) function P1h(kg)
     real(dl), intent(in) :: kg
     real(dl) :: rombint,tol2
     !P1h = rombint(P1hi,log(mmin),log(mmax),tol)
-    CALL qromb(P1hi,log(4.117d-03),dlog(2.864d02),P1h,kg)
+    CALL qromb(P1hi,log(4.357d-03),dlog(2.864d02),P1h,kg)
 end function P1h
 real(dl) function P1hi(lnnu,k)
     real(dl),intent(in) :: lnnu
@@ -233,7 +233,7 @@ end function P1hi
 real(dl) function P2h(kg)
     real(dl), intent(in) :: kg
     real(dl) :: rombint
-    CALL qromb(P2hi,log(4.117d-03),dlog(2.864d02),P2h,kg)
+    CALL qromb(P2hi,log(4.357d-03),dlog(2.864d02),P2h,kg)
     P2h = P2h**2*interpf(log(hm%k),dble(hm%Pk),log(kg))
 end function P2h
 real(dl) function P2hi(lnnu,k)
