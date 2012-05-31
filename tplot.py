@@ -1,6 +1,5 @@
 from pylab import *
 
-
 [a, b,c,d,e] = loadtxt('output/test_ukm.dat',unpack=True)
 loglog(a,b,label='$10^{11} M_{\odot}$')
 loglog(a,c)
@@ -30,8 +29,8 @@ show()
 
 [a,b,c,d,e] = loadtxt('output/test_nu_fnu.dat',unpack=True)
 loglog(a,sqrt(b))
-ylim(0.5,50)
-xlim(10,1e15)
+ylim(0.5,30)
+xlim(1e2,1e15)
 ylabel('$\sigma(m)$',fontsize=16)
 xlabel('$M_{\odot}$',fontsize=16)
 title('Compare with Fig. 5 of astro-ph/0010468')

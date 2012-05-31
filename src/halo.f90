@@ -5,11 +5,11 @@ use hm_init
 implicit none
 
 !
-real(dl), parameter:: kmin = 8.4e-5
-real(dl), parameter:: kmax = 3.0d3
-real(dl), parameter:: mmin = 2e1
-real(dl), parameter:: mmax = 1e16
-real(dl), parameter:: dlnk = 0.1758d0
+real(dl), parameter:: kmin = 8.4d-5
+real(dl), parameter:: kmax = 4.0d5
+real(dl), parameter:: mmin = 1.0d-4
+real(dl), parameter:: mmax = 1.0d16
+!real(dl), parameter:: dlnk = 0.226
 integer, parameter:: mpts = 100
 
 contains
@@ -20,25 +20,32 @@ subroutine init_halo()
     allocate(hm%m(mpts),hm%sig_2(mpts),hm%nu_m(mpts),hm%nu_fnum(mpts),hm%bias_1(mpts),hm%bias_2(mpts))
     allocate(hm%sp_nu_fnum(mpts),hm%sp_bias_1(mpts))
     allocate(hm%ukm(mpts,mpts),hm%sp_ukm(mpts,mpts))
-    lnm = 1.69897
+    !lnm = 1.69897
+    lnm = -4
     open(unit=10,file='output/' // trim(hm%run_name) // '_nu_fnu.dat',form='formatted',status='unknown')
     do i = 1,mpts
         m = 10**lnm
-        hm%m(i) = m
+        hm%m(i) = m!exp(dlog(mmin)+(dlog(mmax)-dlog(mmin))/(mpts-1.0)*(i-1.0))
         hm%sig_2(i) = sig_2(m)
         hm%nu_m(i) = nu_m(m)
         hm%nu_fnum(i) = nu_fnu(hm%nu_m(i))
         hm%bias_1(i) = bias_1(hm%nu_m(i))
         write(10,'(6Es13.3)') hm%m(i), hm%sig_2(i),hm%nu_m(i), hm%nu_fnum(i), hm%bias_1(i)
-        lnm = lnm+0.1445
+        !lnm = lnm+0.1445
+        lnm = lnm+0.2043
     end do
     close(10)
+    write(*,*) minval(hm%m)
     write(*,*) maxval(hm%m)/1.0d16
     !stop
 
     do j=1,size(hm%k)
         do i=1,size(hm%nu_m)
+            if (hm%k(j) .lt. 3000) then
             hm%ukm(j,i) = ukm(hm%k(j),hm%m(i))
+            else
+                hm%ukm(j,i) = 0
+                endif
         enddo
     enddo
     hm%sp_ukm = 0
@@ -211,12 +218,15 @@ subroutine linear_pk(k,Pk)
    real(dl), allocatable,dimension(:),intent(inout) :: k
    real(sp), allocatable,dimension(:),intent(inout) :: Pk
    integer :: i,error
+   real(dl) :: dlnk
    type(CAMBdata) :: P
 
    ! Get k.
    do i=1,mpts
-     k(i)=exp(dlog(kmin)+dlnk*(i-1))
+     !k(i)=exp(dlog(kmin)+dlnk*(i-1.0))
+     k(i)=exp(dlog(kmin)+(dlog(kmax)-dlog(kmin))/(mpts-1.0)*(i-1.0))
    end do
+   dlnk = (dlog(kmax)-dlog(kmin))/(mpts-1.0)
 
    ! Get P(k)
    call CAMB_GetTransfers(hm%Params, P, error)
