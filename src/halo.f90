@@ -9,8 +9,8 @@ real(dl), parameter:: kmin = 8.4e-5
 real(dl), parameter:: kmax = 3.0d3
 real(dl), parameter:: mmin = 2e1
 real(dl), parameter:: mmax = 1e16
-real(dl), parameter:: dlnk = 0.1141d0
-integer, parameter:: mpts = 150
+real(dl), parameter:: dlnk = 0.1758d0
+integer, parameter:: mpts = 100
 
 contains
 
@@ -30,7 +30,7 @@ subroutine init_halo()
         hm%nu_fnum(i) = nu_fnu(hm%nu_m(i))
         hm%bias_1(i) = bias_1(hm%nu_m(i))
         write(10,'(6Es13.3)') hm%m(i), hm%sig_2(i),hm%nu_m(i), hm%nu_fnum(i), hm%bias_1(i)
-        lnm = lnm+0.096
+        lnm = lnm+0.1445
     end do
     close(10)
     write(*,*) maxval(hm%m)/1.0d16
