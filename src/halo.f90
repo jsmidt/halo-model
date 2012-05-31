@@ -36,9 +36,12 @@ real(dl) function P2hi(lnnu,k)
     real(dl) :: m,inu_fnu,ibias_1,nu,iukm
     nu = exp(lnnu)
     m = interpf(dlog(hm%nu_m),hm%m,lnnu)
-  call splint(dlog(hm%nu_m),hm%nu_fnum,hm%sp_nu_fnum,size(hm%nu_m),lnnu,inu_fnu)
-  call splint(dlog(hm%nu_m),hm%bias_1,hm%sp_bias_1,size(hm%nu_m),lnnu,ibias_1)
-call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,hm%mpts,hm%mpts,dlog(k),dlog(m),iukm)
+    call splint(dlog(hm%nu_m),hm%nu_fnum,hm%sp_nu_fnum,size(hm%nu_m),lnnu, &
+            inu_fnu)
+    call splint(dlog(hm%nu_m),hm%bias_1,hm%sp_bias_1,size(hm%nu_m),lnnu,&
+            ibias_1)
+    call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,hm%mpts,hm%mpts, &
+            dlog(k),dlog(m),iukm)
     P2hi = ibias_1*inu_fnu*iukm
 end function P2hi
 
