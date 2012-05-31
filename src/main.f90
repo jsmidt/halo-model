@@ -13,21 +13,8 @@ allocate(hm%k(mpts),hm%Pk(mpts))
 allocate(xx(10),yy(10))
 call init_params()
 call linear_pk(hm%k,hm%Pk)
-
-!write(*,*) sig_2(1.0d0)
-write(*,*) minval(hm%k)
-write(*,*) maxval(hm%k)
-!do i=1,100
-!write(*,*) hm%k(i), hm%Pk(i)
-!enddo
-!stop
-
-!write(*,*) maxval(hm%k)
-!    stop
 call init_halo()
 
-!write(*,*) size(hm%ukm,1)
-!write(*,*) exp(hm%lnk2d)
 
 kk  = -4
 m = 1e11
