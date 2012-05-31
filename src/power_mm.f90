@@ -19,14 +19,13 @@ allocate(hm%k(hm%mpts),hm%Pk(hm%mpts))
 call linear_pk(hm%k,hm%Pk)
 call init_halo()
 
-
 kk  = -4
 m = 1e11
 mm = 4.64e12
 mmm = 2.15e14
 mmmm = 1e16
 open(unit=10,file='output/' // trim(hm%run_name) // '_ukm.dat',form='formatted',status='unknown')
-do i=1,48
+do i=1,50
     kg = 10**kk
     !write(*,*) kg
     write(10,'(6Es12.3)') kg,ukm(kg,m),ukm(kg,mm),ukm(kg,mmm),ukm(kg,mmmm)

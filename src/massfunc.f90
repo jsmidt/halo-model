@@ -105,6 +105,7 @@ real(dl) function nu_fnu(nu)
     real(dl):: A,q,p,nup
     !A = 0.3222d0
     A = 0.413078984
+    !A = 0.350192781
     q = 0.75d0
     p = 0.3d0
     nup = q*nu
@@ -116,7 +117,7 @@ end function nu_fnu
 real(dl) function nfnu(m)
     real(dl), intent(in) :: m
     real(dl) :: rombint
-    nfnu = rombint(nfnui,dlog(4.434d-019),dlog(2.386d06),tol)
+    nfnu = rombint(nfnui,dlog(3.657d-05),dlog(3.633d01),tol)
 end function nfnu
 
 

@@ -29,6 +29,9 @@ halo: $(OBJ) ../../camb/libcamb.a
 %.o: %.F90
 	$(F90C) $(F90FLAGS) -c $*.F90
 
+%.o: %.f
+	$(F90C) $(F90FLAGS) -c $*.f
+
 clean:
 	-rm -f *.o *.a *.dat ../halo core *.mod 
 cleaner:
