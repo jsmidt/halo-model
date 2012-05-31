@@ -9,20 +9,20 @@ real(dl), parameter:: kmin = 8.4e-5
 real(dl), parameter:: kmax = 3.0d3
 real(dl), parameter:: mmin = 2e1
 real(dl), parameter:: mmax = 1e16
-real(dl), parameter:: dlnk = 0.087d0
-integer, parameter:: mpts = 200
+real(dl), parameter:: dlnk = 0.0897d0
+integer, parameter:: mpts = 195
 
 contains
 
 subroutine init_halo()
     real(dl) :: lnm,m,lnk,k
-    integer :: i,j,N
-    N = 195
-    allocate(hm%m(N),hm%sig_2(N),hm%nu_m(N),hm%nu_fnum(N),hm%bias_1(N),hm%bias_2(N))
-    allocate(hm%sp_nu_fnum(N),hm%sp_bias_1(N))
+    integer :: i,j
+    allocate(hm%m(mpts),hm%sig_2(mpts),hm%nu_m(mpts),hm%nu_fnum(mpts),hm%bias_1(mpts),hm%bias_2(mpts))
+    allocate(hm%sp_nu_fnum(mpts),hm%sp_bias_1(mpts))
+    allocate(hm%ukm(mpts,mpts),hm%sp_ukm(mpts,mpts))
     lnm = 1.69897
     open(unit=10,file='output/' // trim(hm%run_name) // '_nu_fnu.dat',form='formatted',status='unknown')
-    do i = 1,N
+    do i = 1,mpts
         m = 10**lnm
         hm%m(i) = m
         hm%sig_2(i) = sig_2(m)
@@ -44,7 +44,7 @@ subroutine init_halo()
 
     call spline(dlog(hm%nu_m),hm%nu_fnum,size(hm%nu_m),1d40,1d40,hm%sp_nu_fnum)
     call spline(dlog(hm%nu_m),hm%bias_1,size(hm%nu_m),1d40,1d40,hm%sp_bias_1)
-    call splie2(dlog(hm%k), dlog(hm%m),hm%ukm, mpts,N, hm%sp_ukm)
+    call splie2(dlog(hm%k), dlog(hm%m),hm%ukm, mpts,mpts, hm%sp_ukm)
 
     ! Write out redshift and cosmology being used
     write(*,*) ' ' 
@@ -237,7 +237,7 @@ real(dl) function P1hi(lnnu,k)
     nu = exp(lnnu)
     m = interpf(dlog(hm%nu_m),hm%m,lnnu)
   call splint(dlog(hm%nu_m),hm%nu_fnum,hm%sp_nu_fnum,size(hm%nu_m),lnnu,inu_fnu)
-call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,mpts,195,dlog(k),dlog(m),iukm)
+call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,mpts,mpts,dlog(k),dlog(m),iukm)
     P1hi = m/hm%rho_c/omegamz*inu_fnu*iukm**2
 end function P1hi
 
@@ -255,7 +255,7 @@ real(dl) function P2hi(lnnu,k)
     m = interpf(dlog(hm%nu_m),hm%m,lnnu)
   call splint(dlog(hm%nu_m),hm%nu_fnum,hm%sp_nu_fnum,size(hm%nu_m),lnnu,inu_fnu)
   call splint(dlog(hm%nu_m),hm%bias_1,hm%sp_bias_1,size(hm%nu_m),lnnu,ibias_1)
-call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,mpts,195,dlog(k),dlog(m),iukm)
+call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,mpts,mpts,dlog(k),dlog(m),iukm)
     P2hi = ibias_1*inu_fnu*iukm
 end function P2hi
 
