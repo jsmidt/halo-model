@@ -4,24 +4,18 @@ use CAMB
 use hm_init
 implicit none
 
-!
-real(dl), parameter:: kmin = 8.4d-5
-real(dl), parameter:: kmax = 4.0d6
-real(dl), parameter:: mmin = 1.0d-8
-real(dl), parameter:: mmax = 1.0d16
-integer, parameter:: mpts = 100
 
 contains
 
 subroutine init_halo()
     real(dl) :: lnm,m,lnk,k
     integer :: i,j
-    allocate(hm%m(mpts),hm%sig_2(mpts),hm%nu_m(mpts),hm%nu_fnum(mpts),hm%bias_1(mpts),hm%bias_2(mpts))
-    allocate(hm%sp_nu_fnum(mpts),hm%sp_bias_1(mpts))
-    allocate(hm%ukm(mpts,mpts),hm%sp_ukm(mpts,mpts))
+    allocate(hm%m(hm%mpts),hm%sig_2(hm%mpts),hm%nu_m(hm%mpts),hm%nu_fnum(hm%mpts),hm%bias_1(hm%mpts),hm%bias_2(hm%mpts))
+    allocate(hm%sp_nu_fnum(hm%mpts),hm%sp_bias_1(hm%mpts))
+    allocate(hm%ukm(hm%mpts,hm%mpts),hm%sp_ukm(hm%mpts,hm%mpts))
     open(unit=10,file='output/' // trim(hm%run_name) // '_nu_fnu.dat',form='formatted',status='unknown')
-    do i = 1,mpts
-        m = 10**(dlog10(mmin)+(dlog10(mmax)-dlog10(mmin))/(mpts-1.0)*(i-1.0))
+    do i = 1,hm%mpts
+        m = 10**(dlog10(hm%mmin)+(dlog10(hm%mmax)-dlog10(hm%mmin))/(hm%mpts-1.0)*(i-1.0))
         hm%m(i) = m
         hm%sig_2(i) = sig_2(m)
         hm%nu_m(i) = nu_m(m)
@@ -44,7 +38,7 @@ subroutine init_halo()
 
     call spline(dlog(hm%nu_m),hm%nu_fnum,size(hm%nu_m),1d40,1d40,hm%sp_nu_fnum)
     call spline(dlog(hm%nu_m),hm%bias_1,size(hm%nu_m),1d40,1d40,hm%sp_bias_1)
-    call splie2(dlog(hm%k), dlog(hm%m),hm%ukm, mpts,mpts, hm%sp_ukm)
+    call splie2(dlog(hm%k), dlog(hm%m),hm%ukm, hm%mpts,hm%mpts, hm%sp_ukm)
 
     ! Write out redshift and cosmology being used
     write(*,*) ' ' 
@@ -71,7 +65,7 @@ real(dl) function sig_2(m)
     omegal = hm%Params%omegav
     omegamz = omegam*(1.0+hm%z)**3/(omegam*(1.0+hm%z)**3+omegal)
     R = (3.0d0*m/(4.0d0*pi*hm%rho_c*omegamz))**(1.0d0/3.0d0)
-    CALL qromb(sig_2int,dlog(kmin),dlog(kmax),sig_2,R)
+    CALL qromb(sig_2int,dlog(hm%kmin),dlog(hm%kmax),sig_2,R)
 end function sig_2
 real(dl) function sig_2int(lnk,R)
     real(dl),intent(in) :: lnk,R
@@ -173,8 +167,8 @@ real(dl) function ukm(k,m)
     omegal = hm%Params%omegan
 
     ! Consentration parameter. Eq. 78 of astro-ph/0206508
-    !ms = interpf(log(hm%nu_m),hm%m,log(1.0d0))
-    ms = 3.6d12
+    ms = interpf(log(hm%nu_m),hm%m,log(1.0d0))
+    !ms = 3.6d12
     c = 9.0/(1.0+hm%z)*(m/ms)**(-0.13d0)
 
     ! \Delta_c & E(z)^2. Eq. 5-6 of arxiv:0907.4387
@@ -213,14 +207,14 @@ subroutine linear_pk(k,Pk)
    type(CAMBdata) :: P
 
    ! Get k.
-   do i=1,mpts
-     k(i)=exp(dlog(kmin)+(dlog(kmax)-dlog(kmin))/(mpts-1.0)*(i-1.0))
+   do i=1,hm%mpts
+     k(i)=exp(dlog(hm%kmin)+(dlog(hm%kmax)-dlog(hm%kmin))/(hm%mpts-1.0)*(i-1.0))
    end do
-   dlnk = (dlog(kmax)-dlog(kmin))/(mpts-1.0)
+   dlnk = (dlog(hm%kmax)-dlog(hm%kmin))/(hm%mpts-1.0)
 
    ! Get P(k)
    call CAMB_GetTransfers(hm%Params, P, error)
-   call Transfer_GetMatterPower(P%MTrans,Pk,1,1,real(kmin),real(dlnk),mpts)
+   call Transfer_GetMatterPower(P%MTrans,Pk,1,1,real(hm%kmin),real(dlnk),hm%mpts)
 
 end subroutine linear_pk
 
@@ -239,7 +233,7 @@ real(dl) function P1hi(lnnu,k)
     nu = exp(lnnu)
     m = interpf(dlog(hm%nu_m),hm%m,lnnu)
   call splint(dlog(hm%nu_m),hm%nu_fnum,hm%sp_nu_fnum,size(hm%nu_m),lnnu,inu_fnu)
-call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,mpts,mpts,dlog(k),dlog(m),iukm)
+call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,hm%mpts,hm%mpts,dlog(k),dlog(m),iukm)
     P1hi = m/hm%rho_c/omegamz*inu_fnu*iukm**2
 end function P1hi
 
@@ -257,7 +251,7 @@ real(dl) function P2hi(lnnu,k)
     m = interpf(dlog(hm%nu_m),hm%m,lnnu)
   call splint(dlog(hm%nu_m),hm%nu_fnum,hm%sp_nu_fnum,size(hm%nu_m),lnnu,inu_fnu)
   call splint(dlog(hm%nu_m),hm%bias_1,hm%sp_bias_1,size(hm%nu_m),lnnu,ibias_1)
-call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,mpts,mpts,dlog(k),dlog(m),iukm)
+call splin2(dlog(hm%k),dlog(hm%m),hm%ukm,hm%sp_ukm,hm%mpts,hm%mpts,dlog(k),dlog(m),iukm)
     P2hi = ibias_1*inu_fnu*iukm
 end function P2hi
 

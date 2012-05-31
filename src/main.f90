@@ -9,9 +9,10 @@ real(dl), dimension(1) :: bix,biy
 real(dl), dimension(1,1) :: biz
 integer :: i,ier
 
-allocate(hm%k(mpts),hm%Pk(mpts))
+
 allocate(xx(10),yy(10))
 call init_params()
+allocate(hm%k(hm%mpts),hm%Pk(hm%mpts))
 call linear_pk(hm%k,hm%Pk)
 call init_halo()
 

@@ -11,6 +11,9 @@ type, extends(CAMBdata) :: HMdata
    real(dl) :: rho_c
    real(dl) :: r_s
    real(dl) :: z
+   real(dl) :: kmin,kmax
+   real(dl) :: mmin,mmax
+   integer :: mpts
    real(dl), allocatable,dimension(:) :: k,m,nu_m,sig_2,bias_1,bias_2,nu_fnum
    real(dl), allocatable,dimension(:) :: sp_bias_1,sp_nu_fnum
    real(sp), allocatable,dimension(:) :: Pk
@@ -24,7 +27,13 @@ type(HMdata) :: hm
 contains
 
 subroutine init_params()
-    !type(CAMBdata) :: hm
+    hm%kmin = 8.4d-5
+    hm%kmax = 4.0d6
+    hm%mmin = 1.0d-8
+    hm%mmax = 1.0d16
+    hm%mpts = 100
+
+
     ! Get Default Cosmology Parameters. Match to WMAP 7.
     call CAMB_SetDefParams(hm%Params)
 
