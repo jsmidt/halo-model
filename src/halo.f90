@@ -6,8 +6,8 @@ implicit none
 
 !
 real(dl), parameter:: kmin = 8.4d-5
-real(dl), parameter:: kmax = 4.0d5
-real(dl), parameter:: mmin = 1.0d-4
+real(dl), parameter:: kmax = 4.0d6
+real(dl), parameter:: mmin = 1.0d-8
 real(dl), parameter:: mmax = 1.0d16
 integer, parameter:: mpts = 100
 
