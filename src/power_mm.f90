@@ -1,3 +1,18 @@
+!
+!  power_mm.f90 - calculates the dark hatter power spectrum.
+!  
+!    This module initialized the halo-model object then calculates the 
+!    dark matter power pectrum from the 1 and 2 halo-terms.  See eq. 95
+!    of Cooray and Sheth (2002) astro-ph/0206508. 
+!
+!  Version history: (Only report changes for version releases of code.)
+!     v0.6 Joseph Smidt 05/31/2012 - Initial complete 
+!
+!  See also: halo.f90, massfunc.f90 and hm_init.f90
+!
+
+
+
 module power_mm
 use halo
 implicit none
