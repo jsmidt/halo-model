@@ -13,6 +13,8 @@
 !
 !  See also: massfunc.f90 and hm_init.f90
 !
+!  Copyright (c) 2012 Joseph Smidt. See accompanying BSD license.
+!
 
 
 

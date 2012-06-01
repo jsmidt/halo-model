@@ -29,13 +29,24 @@ The release schedule is expected to be a few betas followed by a release
 candidate followed by a version 1.0 release.  The goals for each release 
 are:
 
-  -v0.6: (Beta) Working dark matter power spectrum. (eq. 95)
-  -v0.7: (Beta) Working dark matter bispectrum.     (eq. 96)
-  -v0.8: (Beta) Working dark matter trispectrum.    (eq. 97)
-  -v0.9: (Release candidate) De-bugged & well-structured version of the above.
-  -v1.0: Bug free release.  
+  -v0.1: Working dark matter power spectrum. (eq. 95)
+  -v0.2: Working dark matter bispectrum.     (eq. 96)
+  -v0.3: Working dark matter trispectrum.    (eq. 97)
+  -v0.4: Galaxy-Galaxy and Galaxy-Matter versions of the above.
+  -v0.5: General restructuring of code to facilitate next calculations.
+  -v0.6: Weak lensing and secondary halo calculations.
+  -v0.7: Thermal and Kinetic SZ halo calculations.
+  -v0.8: Reionization halo calculations.
+  -v0.9: Any more physics I decide to add before v1.0 and final restructuring.
+  -v1.0: A final debugged version of the code for the general public.
 
-The hope is to have the version 1.0 out sometime in July.  A version 2.0 will
-quickley be in the works implementing the correlations between matter and
-galaxies as well as various angular spectra which are projections on the 2D sky.
+The hope is to have through versions 0.5 by July and a final verison 1.0 by the
+end of the summer with with a few weekly beta releases between version 0.9 and
+1.0 to address bugs and restructure to facilitate use for the general user. I
+hope to have test programs where results may be easily verified with the
+literature. 
+
+Any patches, bug reports and useful comments are welcome so thanks in advance.
+
+Joseph Smidt
 
