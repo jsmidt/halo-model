@@ -34,6 +34,10 @@ integer :: i,ier
 call init_params()
 allocate(hm%k(hm%mpts),hm%Pk(hm%mpts))
 call linear_pk(hm%k,hm%Pk)
+hm%Pk = hm%Pk
+write(*,*) sqrt(sigma_R(8.0d0))
+write(*,*) hm%rho_c/1.0d11
+!stop
 call init_halo()
 
 kk  = -4

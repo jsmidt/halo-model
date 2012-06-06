@@ -65,8 +65,15 @@ real(dl) function sig_2(m)
     omegal = hm%Params%omegav
     omegamz = omegam*(1.0+hm%z)**3/(omegam*(1.0+hm%z)**3+omegal)
     R = (3.0d0*m/(4.0d0*pi*hm%rho_c*omegamz))**(1.0d0/3.0d0)
-    CALL qromb(sig_2int,dlog(hm%kmin),dlog(hm%kmax),sig_2,R)
+    !CALL qromb(sig_2int,dlog(hm%kmin),dlog(hm%kmax),sig_2,R)
+    sig_2 = sigma_R(R)
 end function sig_2
+
+real(dl) function sigma_R(R)
+    real(dl),intent(in) :: R
+    CALL qromb(sig_2int,dlog(hm%kmin),dlog(hm%kmax),sigma_R,R)
+end function sigma_R
+
 real(dl) function sig_2int(lnk,R)
     real(dl),intent(in) :: lnk,R
     real(dl) :: k,P_lin
@@ -104,7 +111,8 @@ real(dl) function nu_fnu(nu)
     real(dl), intent(in) :: nu
     real(dl):: A,q,p,nup
     !A = 0.3222d0
-    A = 0.413078984
+    !A = 0.413078984
+    A = 0.45078984
     !A = 0.350192781
     q = 0.75d0
     p = 0.3d0
@@ -169,7 +177,6 @@ real(dl) function ukm(k,m)
 
     ! Consentration parameter. Eq. 78 of astro-ph/0206508
     ms = interpf(log(hm%nu_m),hm%m,log(1.0d0))
-    !ms = 3.6d12
     c = 9.0/(1.0+hm%z)*(m/ms)**(-0.13d0)
 
     ! \Delta_c & E(z)^2. Eq. 5-6 of arxiv:0907.4387

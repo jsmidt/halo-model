@@ -41,6 +41,8 @@ subroutine init_params()
     hm%z = 0.0
     hm%Params%WantTransfer= .true.
     hm%Params%WantCls= .false.              
+    hm%Params%Reion%use_optical_depth = .true.
+    hm%Params%Reion%optical_depth = 0.88
     hm%Params%Transfer%redshifts=hm%z       ! Redshift
     hm%Params%InitPower%ScalarPowerAmp(1) = 2.45e-9 ! Scalar amplitude
     hm%Params%omegab  = 0.0455              ! Baryon density
@@ -52,7 +54,9 @@ subroutine init_params()
     hm%Params%Num_Nu_massless = 3.04        ! Massless neutrinos
     hm%Params%Num_Nu_massive  = 0           ! # Massive neutrinos
     hm%Params%InitPower%an(1)  = 0.961      ! Spectral Index
-
+    hm%Params%InitPower%k_0_scalar  = 0.002 ! Scalar Pivot
+    hm%Params%DoLensing = .false.
+    hm%Params%transfer%kmax          =  1000.0
 
     ! To get the critical density rho_c we need to calculate 3H^2/(8\piG).  
     ! We want units of M_\sun/Mpc^3. We know H0 has units of km/s/Mpc and 
