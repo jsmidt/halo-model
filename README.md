@@ -10,11 +10,12 @@ still does not work so don't download until completed.  For more details of the 
 To run the program check that src/Makefile matches your compiler.  The intel
 and Gfortran options are already implemented. There are some Fortran 2003
 features in this code so a modern Fortran compiler is needed (especially for
-using CosmoMC. The code has been tested and works on the Gfortran 4.6 and intel 12.1 compilers. 
+using CosmoMC). The code has been tested and works on the Gfortran 4.6 and intel 12.1 compilers. 
 
 Then to run type:
 
 make
+
 ./halo
 
 to calculate the dark matter power spectrum.  The output will be in the output
