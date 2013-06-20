@@ -3,6 +3,7 @@
 
 
 all: 
+	mkdir -p output
 	cd src && make && cd ..
 
 clean:

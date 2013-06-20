@@ -88,6 +88,5 @@ real(dl) function P2hi(lnnu,k)
 
 end function P2hi
 
-u
 ! End module.
 end module halo
